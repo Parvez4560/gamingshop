@@ -6,14 +6,14 @@ export default function LoginPage() {
   const [isActive, setIsActive] = useState(false);
 
   return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
+    <main className="min-h-screen bg-white">
       <div
-        className={`relative bg-white rounded-3xl shadow-2xl overflow-hidden
-        w-[768px] max-w-full min-h-[500px] md:min-h-[480px]
-        flex flex-col md:block
-        transition-all duration-500
-        ${isActive ? 'active' : ''}`}
-      >
+  className={`relative bg-white overflow-hidden
+  w-full min-h-screen
+  flex flex-col md:block
+  transition-all duration-500
+  ${isActive ? 'active' : ''}`}
+>
 
         {/* ================= SIGN UP FORM ================= */}
         <div
@@ -166,16 +166,11 @@ export default function LoginPage() {
 
             rounded-b-[30px]
             md:rounded-b-none
-            md:rounded-l-[150px]
 
             ${
               isActive
-                ? `
-                  md:-translate-x-full
-                  md:rounded-r-[150px]
-                  md:rounded-l-none
-                `
-                : ''
+                ? 'md:-translate-x-full md:rounded-r-[50px] md:rounded-l-none'
+                : 'md:rounded-l-[50px] md:rounded-r-none'
             }
           `}
         >
