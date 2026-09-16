@@ -8,12 +8,12 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-white">
       <div
-  className={`relative bg-white overflow-hidden
-  w-full min-h-screen
-  flex flex-col md:block
-  transition-all duration-500
-  ${isActive ? 'active' : ''}`}
->
+        className={`relative bg-white overflow-hidden
+        w-full min-h-screen
+        flex flex-col md:block
+        transition-all duration-500
+        ${isActive ? 'active' : ''}`}
+      >
 
         {/* ================= SIGN UP FORM ================= */}
         <div
@@ -70,7 +70,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="bg-indigo-600 text-white text-xs font-semibold py-3 px-11 rounded-lg uppercase tracking-wider mt-3 cursor-pointer hover:bg-indigo-700 transition"
+              className="bg-[#81007f] text-white text-xs font-semibold py-3 px-11 rounded-lg uppercase tracking-wider mt-3 cursor-pointer hover:bg-[#620060] transition"
             >
               Sign Up
             </button>
@@ -127,14 +127,14 @@ export default function LoginPage() {
 
             <a
               href="#"
-              className="text-gray-600 text-xs my-3 hover:text-indigo-600"
+              className="text-gray-600 text-xs my-3 hover:text-[#81007f]"
             >
               Forgot Your Password?
             </a>
 
             <button
               type="submit"
-              className="bg-indigo-600 text-white text-xs font-semibold py-3 px-11 rounded-lg uppercase tracking-wider mt-1 cursor-pointer hover:bg-indigo-700 transition"
+              className="bg-[#81007f] text-white text-xs font-semibold py-3 px-11 rounded-lg uppercase tracking-wider mt-1 cursor-pointer hover:bg-[#620060] transition"
             >
               Sign In
             </button>
@@ -179,7 +179,7 @@ export default function LoginPage() {
           <div
             className={`
               toggle
-              bg-indigo-600
+              bg-[#81007f]
               text-white
               h-full
               relative
@@ -274,7 +274,7 @@ export default function LoginPage() {
 
 
           {/* ================= MOBILE TOGGLE ================= */}
-          <div className="bg-indigo-600 text-white h-full flex md:hidden items-center justify-center">
+          <div className="bg-[#81007f] text-white h-full flex md:hidden items-center justify-center">
 
             {isActive ? (
               <button

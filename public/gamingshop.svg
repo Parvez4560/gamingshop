@@ -1,31 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
-    <!-- গোল্ডেন গ্রেডিয়েন্ট -->
-    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFE600" />
-      <stop offset="50%" stop-color="#FFB800" />
-      <stop offset="100%" stop-color="#D48800" />
+    <!-- ভাইব্রেন্ট পার্পল ও নিয়ন গ্রেডিয়েন্ট -->
+    <linearGradient id="orbitalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff00cc" />
+      <stop offset="50%" stop-color="#81007f" />
+      <stop offset="100%" stop-color="#00f2fe" />
     </linearGradient>
-    
-    <!-- ব্যাকগ্রাউন্ড ও শ্যাডো এফেক্ট -->
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6"/>
+
+    <!-- স্মুথ নিয়ন গ্লো -->
+    <filter id="orbitalGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="14" flood-color="#ff00cc" flood-opacity="0.5"/>
     </filter>
   </defs>
 
-  <!-- ব্যাকগ্রাউন্ড শিল্ড -->
-  <path d="M256 32L64 96v144c0 114.9 83.2 222.4 192 248 108.8-25.6 192-133.1 192-248V96L256 32z" 
-        fill="#111827" 
-        stroke="url(#goldGradient)" 
-        stroke-width="16" 
-        filter="url(#shadow)" />
+  <rect width="512" height="512" fill="none" />
 
-  <!-- ভেতরের ডায়মন্ড (বর্ডারের রঙে) -->
-  <path d="M256 128l64 96-64 160-64-160 64-96z" 
-        fill="url(#goldGradient)" />
-  
-  <!-- ডায়মন্ডের মাঝখানের উজ্জ্বল রিফ্লেকশন লাইন -->
-  <path d="M256 128l32 96-32 160-32-160 32-96z" 
-        fill="#FFFFFF" 
-        fill-opacity="0.3" />
+  <!-- অরবিটাল রিং এবং সেন্ট্রাল ফিউশন কোর (গতি এবং মেলবন্ধনের প্রতীক) -->
+  <g transform="translate(0, 0)" filter="url(#orbitalGlow)">
+    <!-- প্রথম আউটার টিল্টেড অরবিট রিং -->
+    <ellipse cx="256" cy="256" rx="180" ry="70" 
+             fill="none" 
+             stroke="url(#orbitalGradient)" 
+             stroke-width="12" 
+             transform="rotate(-30 256 256)" />
+
+    <!-- দ্বিতীয় আউটার টিল্টেড অরবিট রিং (অন্য দিক থেকে এসে মিলিত হওয়া) -->
+    <ellipse cx="256" cy="256" rx="180" ry="70" 
+             fill="none" 
+             stroke="url(#orbitalGradient)" 
+             stroke-width="12" 
+             transform="rotate(30 256 256)" 
+             opacity="0.85" />
+
+    <!-- একদম মাঝখানের ফিউচারিস্টিক এনার্জি কোর (মাস্টার মিলন বিন্দু) -->
+    <circle cx="256" cy="256" r="45" fill="#0d0216" stroke="url(#orbitalGradient)" stroke-width="10" />
+    <circle cx="256" cy="256" r="16" fill="#ffffff" />
+  </g>
 </svg>
