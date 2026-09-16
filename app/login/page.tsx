@@ -51,21 +51,21 @@ export default function LoginPage() {
               type="text"
               placeholder="Name"
               required
-              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none"
+              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
             />
 
             <input
               type="email"
               placeholder="Email"
               required
-              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none"
+              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
             />
 
             <input
               type="password"
               placeholder="Password"
               required
-              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none"
+              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
             />
 
             <button
@@ -115,14 +115,14 @@ export default function LoginPage() {
               type="email"
               placeholder="Email"
               required
-              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none"
+              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
             />
 
             <input
               type="password"
               placeholder="Password"
               required
-              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none"
+              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
             />
 
             <a
