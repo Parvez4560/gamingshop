@@ -1,0 +1,11 @@
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- হেডব্যান্ড (উপরের বাঁকা অংশ) -->
+  <path d="M3.5 7a4.5 4.5 0 0 1 9 0" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- বাম কানের ইয়ারফোন -->
+  <rect x="2" y="6.5" width="2.5" height="5" rx="1.25" stroke="#666" stroke-width="1.5"/>
+  <!-- ডান কানের ইয়ারফোন এবং মাইক্রোফোনের পাইপ -->
+  <path d="M11.5 6.5h1.25a1.25 1.25 0 0 1 1.25 1.25v2.5a1.25 1.25 0 0 1-1.25 1.25H11.5v-5z" stroke="#666" stroke-width="1.5"/>
+  <path d="M11.5 11.5c0 1.5-1.5 2.25-2.75 2.25" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- মুখের কাছের গোল মাইক্রোফোন -->
+  <circle cx="7.25" cy="12.75" r="1.5" stroke="#666" stroke-width="1.5"/>
+</svg>
