@@ -40,9 +40,16 @@ export default function GameCategoryCard({ game }: GameCategoryCardProps) {
         </div>
 
         {/* অ্যারো বাটন */}
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition-colors group-hover:bg-black group-hover:text-white">
-          →
-        </span>
+        {/* অ্যারো বাটন (public ফোল্ডারের SVG সহ) */}
+<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 transition-colors group-hover:bg-black">
+  <Image
+    src="/right-arrow.svg"
+    alt="Right Arrow Icon"
+    width={20}
+    height={20}
+    className="transition-all duration-300 group-hover:brightness-0 group-hover:invert group-hover:translate-x-0.5"
+  />
+</span>
       </div>
     </Link>
   );

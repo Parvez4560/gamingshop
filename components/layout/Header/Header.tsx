@@ -26,7 +26,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <Link
             href="/login"
-            className="text-sm font-medium text-gray-700 hover:text-black"
+            className="text-sm font-semibold text-gray-800 hover:text-black"
           >
             Login
           </Link>
@@ -36,7 +36,13 @@ export default function Header() {
             aria-label="Open menu"
             className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100"
           >
-            ☰
+            <Image
+              src="/menu.svg"
+              alt="Menu Icon"
+              width={20}
+              height={20}
+              className="h-5 w-5"
+            />
           </button>
         </div>
 
