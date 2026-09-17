@@ -44,7 +44,7 @@ export default function Home() {
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900">Select Your Game</h2>
           <p className="mt-2 text-sm text-gray-500">
-            Choose a game to view available top-up packages and special deals.
+            Login to view available top-up packages and special offers.
           </p>
         </div>
 
