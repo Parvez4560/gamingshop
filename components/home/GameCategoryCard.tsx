@@ -1,7 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function GameCategoryCard({ game }) {
+// গেম অবজেক্টের জন্য টাইপ ডিফাইন করা (TypeScript এর জন্য ভালো)
+interface Game {
+  slug: string;
+  image: string;
+  name: string;
+  description: string;
+}
+
+interface GameCategoryCardProps {
+  game: Game;
+}
+
+export default function GameCategoryCard({ game }: GameCategoryCardProps) {
   return (
     <Link
       href={`/games/${game.slug}`}
@@ -13,7 +25,7 @@ export default function GameCategoryCard({ game }) {
           src={game.image}
           alt={game.name}
           fill
-          priority // এটি যোগ করলে LCP ওয়ার্নিং দূর হয়ে যাবে
+          priority
           className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
         />
       </div>
