@@ -65,8 +65,17 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
             Support / Help
           </Link>
 
+          {/* Coc layout */}
+          <Link
+            href="/coc-layout"
+            onClick={onClose}
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+          >
+            <Image src="/coc-layout.svg" alt="COC Layout" width={20} height={20} className="h-5 w-5 object-contain" />
+            COC Layout
+          </Link>
           
-          {/* Login */}
+          {/* logout */}
           <Link
             href="/logout"
             onClick={onClose}
