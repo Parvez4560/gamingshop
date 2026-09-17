@@ -8,7 +8,7 @@ const gameCategories = [
     name: "Clash of Clans",
     slug: "clash-of-clans",
     description: "Gems, Gold Pass & Top-up",
-    image: "/coc-banner.png", // আপনার ইমেজের নাম এখানে বসাবেন
+    image: "/coc-banner.png",
   },
   {
     id: 2,
