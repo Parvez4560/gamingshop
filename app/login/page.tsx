@@ -17,18 +17,18 @@ export default function LoginPage() {
         
         {/* ================= MOBILE & DESKTOP TOGGLE CONTAINER ================= */}
         {/* z-index কমিয়ে z-2 করা হলো যাতে মেনু (z-50+) ওপেন হলে টগল বাটন মেনুর নিচে ঢাকা থাকে */}
+        {/* ================= MOBILE & DESKTOP TOGGLE CONTAINER ================= */}
         <div
           className={`
             toggle-container
             w-full md:w-1/2
             h-[72px] md:h-full
-            absolute md:absolute
-            top-0 left-0 md:left-1/2
-            z-20
-            overflow-hidden
-            transition-all duration-500 ease-in-out
             fixed md:absolute
             top-16 md:top-0
+            left-0 md:left-1/2
+            z-30
+            overflow-hidden
+            transition-all duration-500 ease-in-out
             ${
               isActive
                 ? 'md:-translate-x-full md:rounded-r-[50px] md:rounded-l-none'
