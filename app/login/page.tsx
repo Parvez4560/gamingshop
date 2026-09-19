@@ -3,19 +3,20 @@
 import { useState } from 'react';
 import FloatingInput from '@/components/FloatingInput';
 import Header from '@/components/layout/Header/Header';
+
 export default function LoginPage() {
   const [isActive, setIsActive] = useState(false);
 
   return (
     <>
-      {/* হেডার সবার উপরে ফিক্সড */}
+      {/* হেডার সবার উপরে ফিক্সড (z-50 বা তার বেশি) */}
       <Header />
 
       {/* মূল কন্টেইনার */}
       <main className="h-[calc(100vh-4rem)] w-full overflow-hidden bg-white relative flex flex-col md:block">
         
         {/* ================= MOBILE & DESKTOP TOGGLE CONTAINER ================= */}
-        {/* মোবাইল স্ক্রিনে এটি হেডারের নিচে একদম স্টিকি হয়ে আটকে থাকবে */}
+        {/* z-index কমিয়ে z-2 করা হলো যাতে মেনু (z-50+) ওপেন হলে টগল বাটন মেনুর নিচে ঢাকা থাকে */}
         <div
           className={`
             toggle-container
@@ -23,11 +24,11 @@ export default function LoginPage() {
             h-[72px] md:h-full
             absolute md:absolute
             top-0 left-0 md:left-1/2
-            z-[1000]
+            z-20
             overflow-hidden
             transition-all duration-500 ease-in-out
-            sticky md:absolute
-            top-0
+            fixed md:absolute
+            top-16 md:top-0
             ${
               isActive
                 ? 'md:-translate-x-full md:rounded-r-[50px] md:rounded-l-none'
@@ -150,7 +151,7 @@ export default function LoginPage() {
 
         {/* ================= FORMS CONTAINER ================= */}
         <div
-          className={`relative bg-white w-full h-full flex-1 overflow-y-auto md:overflow-hidden transition-all duration-500 ${
+          className={`relative bg-white w-full h-full flex-1 overflow-y-auto md:overflow-hidden transition-all duration-500 pt-[72px] md:pt-0 ${
             isActive ? 'active' : ''
           }`}
         >
@@ -161,7 +162,6 @@ export default function LoginPage() {
               absolute top-0 h-full w-full md:w-1/2 left-0
               transition-all duration-500 ease-in-out
               z-10
-              pt-20 md:pt-0
 
               ${
                 isActive
@@ -207,7 +207,6 @@ export default function LoginPage() {
               absolute top-0 h-full w-full md:w-1/2 left-0
               transition-all duration-500 ease-in-out
               z-20
-              pt-20 md:pt-0
 
               ${
                 isActive
