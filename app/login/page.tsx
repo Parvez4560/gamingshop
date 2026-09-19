@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import FloatingInput from '@/components/FloatingInput';
 
 export default function LoginPage() {
   const [isActive, setIsActive] = useState(false);
@@ -47,35 +48,9 @@ export default function LoginPage() {
               Create Account
             </h1>
 
-            <input
-              type="text"
-              placeholder="Name"
-              required
-              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
-            />
-
-  <div className="relative my-2 w-full">
-  <input
-    type="email"
-    id="test-email"
-    placeholder=" "
-    required
-    className="peer block px-4 py-3.5 w-full text-xs text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#81007f] peer"
-  />
-  <label
-    htmlFor="test-email"
-    className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-[#81007f] left-3"
-  >
-    Email
-  </label>
-</div>
-
-            <input
-              type="password"
-              placeholder="Password"
-              required
-              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
-            />
+            <FloatingInput type="text" id="signup-name" label="Name" />
+            <FloatingInput type="email" id="signup-email" label="Email" />
+            <FloatingInput type="password" id="signup-password" label="Password" />
 
             <button
               type="submit"
@@ -120,19 +95,8 @@ export default function LoginPage() {
               Gaming Shop Login
             </h1>
 
-            <input
-              type="email"
-              placeholder="Email"
-              required
-              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
-            />
-
-            <input
-              type="password"
-              placeholder="Password"
-              required
-              className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
-            />
+            <FloatingInput type="email" id="signin-email" label="Email" />
+            <FloatingInput type="password" id="signin-password" label="Password" />
 
             <a
               href="#"
