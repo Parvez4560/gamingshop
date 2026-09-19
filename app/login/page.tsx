@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import FloatingInput from '@/components/FloatingInput';
-import Header from '@/components/layout/Header/Header';
-
+import Header from "@/components/layout/Header/Header";
 export default function LoginPage() {
   const [isActive, setIsActive] = useState(false);
 
@@ -12,110 +11,114 @@ export default function LoginPage() {
       {/* হেডার সবার উপরে ফিক্সড */}
       <Header />
 
-      <main className="min-h-[calc(100vh-4rem)] bg-white w-full relative">
+      {/* ========================================================= */}
+      {/* 1. মোবাইল লেআউট (শুধুমাত্র মোবাইলের জন্য: block md:hidden) */}
+      {/* ========================================================= */}
+      <div className="block md:hidden w-full relative min-h-[calc(100vh-4rem)] bg-white">
         
-        {/* ========================================================= */}
-        {/* 1. মোবাইল লেআউট (শুধুমাত্র মোবাইলের জন্য দৃশ্যমান: md:hidden) */}
-        {/* ========================================================= */}
-        <div className="block md:hidden w-full relative">
-          
-          {/* হেডারের নিচে ফিক্সড টগল বার */}
-          <div className="sticky top-16 z-35 w-full h-[60px] bg-[#81007f] text-white flex items-center justify-center shadow-md">
-            <button
-              type="button"
-              onClick={() => setIsActive(!isActive)}
-              className="w-full h-full text-sm font-semibold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isActive ? (
-                <span>Switch to Sign In ▾</span>
-              ) : (
-                <span>Switch to Sign Up ▾</span>
-              )}
-            </button>
-          </div>
-
-          {/* মোবাইল ফর্ম কন্টেইনার (ওপর থেকে স্লাইড হয়ে আসবে) */}
-          <div className="relative w-full bg-white p-6 overflow-hidden min-h-[calc(100vh-10rem)] flex items-center justify-center">
-            
-            {/* Mobile Sign In */}
-            <div
-              className={`
-                w-full max-w-sm bg-white transition-all duration-500 ease-in-out absolute
-                ${
-                  isActive
-                    ? '-translate-y-full opacity-0 pointer-events-none'
-                    : 'translate-y-0 opacity-100 pointer-events-auto'
-                }
-              `}
-            >
-              <form className="flex items-center justify-center flex-col text-center w-full py-4">
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">
-                  Gaming Shop Login
-                </h1>
-
-                <FloatingInput type="email" id="mob-signin-email" label="Email" />
-                <FloatingInput type="password" id="mob-signin-password" label="Password" />
-
-                <a
-                  href="#"
-                  className="text-gray-600 text-xs my-3 hover:text-[#81007f] self-start"
-                >
-                  Forgot Your Password?
-                </a>
-
-                <button
-                  type="submit"
-                  className="w-full bg-[#81007f] text-white text-xs font-semibold py-3 rounded-lg uppercase tracking-wider mt-4 cursor-pointer hover:bg-[#620060] transition"
-                >
-                  Sign In
-                </button>
-              </form>
-            </div>
-
-            {/* Mobile Sign Up */}
-            <div
-              className={`
-                w-full max-w-sm bg-white transition-all duration-500 ease-in-out absolute
-                ${
-                  isActive
-                    ? 'translate-y-0 opacity-100 pointer-events-auto'
-                    : 'translate-y-full opacity-0 pointer-events-none'
-                }
-              `}
-            >
-              <form className="flex items-center justify-center flex-col text-center w-full py-4">
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">
-                  Create Account
-                </h1>
-
-                <FloatingInput type="text" id="mob-signup-name" label="Name" />
-                <FloatingInput type="email" id="mob-signup-email" label="Email" />
-                <FloatingInput type="password" id="mob-signup-password" label="Password" />
-
-                <button
-                  type="submit"
-                  className="w-full bg-[#81007f] text-white text-xs font-semibold py-3 rounded-lg uppercase tracking-wider mt-4 cursor-pointer hover:bg-[#620060] transition"
-                >
-                  Sign Up
-                </button>
-              </form>
-            </div>
-
-          </div>
+        {/* হেডারের নিচে ফিক্সড টগল বার */}
+        <div className="sticky top-16 z-30 w-full h-[60px] bg-[#81007f] text-white flex items-center justify-center shadow-md">
+          <button
+            type="button"
+            onClick={() => setIsActive(!isActive)}
+            className="w-full h-full text-sm font-semibold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isActive ? (
+              <span>Switch to Sign In ▾</span>
+            ) : (
+              <span>Switch to Sign Up ▾</span>
+            )}
+          </button>
         </div>
 
+        {/* মোবাইল ফর্ম কন্টেইনার (ওপর থেকে নিচে স্লাইড অ্যানিমেশন) */}
+        <div className="relative w-full bg-white px-6 py-8 overflow-hidden min-h-[calc(100vh-10rem)] flex items-center justify-center">
+          
+          {/* Mobile Sign In */}
+          <div
+            className={`
+              w-full max-w-sm bg-white transition-all duration-500 ease-in-out absolute
+              ${
+                isActive
+                  ? 'translate-y-full opacity-0 pointer-events-none'
+                  : 'translate-y-0 opacity-100 pointer-events-auto'
+              }
+            `}
+          >
+            <form className="flex items-center justify-center flex-col text-center w-full py-4">
+              <h1 className="text-2xl font-bold text-gray-900 mb-6">
+                Gaming Shop Login
+              </h1>
 
-        {/* ========================================================= */}
-        {/* 2. ডেস্কটপ লেআউট (আগের মতো সম্পূর্ণ ঠিক রাখা হলো: hidden md:block) */}
-        {/* ========================================================= */}
+              <FloatingInput type="email" id="mob-signin-email" label="Email" />
+              <FloatingInput type="password" id="mob-signin-password" label="Password" />
+
+              <a
+                href="#"
+                className="text-gray-600 text-xs my-3 hover:text-[#81007f] self-start"
+              >
+                Forgot Your Password?
+              </a>
+
+              <button
+                type="submit"
+                className="w-full bg-[#81007f] text-white text-xs font-semibold py-3 rounded-lg uppercase tracking-wider mt-4 cursor-pointer hover:bg-[#620060] transition"
+              >
+                Sign In
+              </button>
+            </form>
+          </div>
+
+          {/* Mobile Sign Up */}
+          <div
+            className={`
+              w-full max-w-sm bg-white transition-all duration-500 ease-in-out absolute
+              ${
+                isActive
+                  ? 'translate-y-0 opacity-100 pointer-events-auto'
+                  : '-translate-y-full opacity-0 pointer-events-none'
+              }
+            `}
+          >
+            <form className="flex items-center justify-center flex-col text-center w-full py-4">
+              <h1 className="text-2xl font-bold text-gray-900 mb-6">
+                Create Account
+              </h1>
+
+              <FloatingInput type="text" id="mob-signup-name" label="Name" />
+              <FloatingInput type="email" id="mob-signup-email" label="Email" />
+              <FloatingInput type="password" id="mob-signup-password" label="Password" />
+
+              <button
+                type="submit"
+                className="w-full bg-[#81007f] text-white text-xs font-semibold py-3 rounded-lg uppercase tracking-wider mt-4 cursor-pointer hover:bg-[#620060] transition"
+              >
+                Sign Up
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+
+      {/* ========================================================= */}
+      {/* 2. ডেস্কটপ লেআউট (শুধুমাত্র বড় স্ক্রিনের জন্য: hidden md:block) */}
+      {/* ========================================================= */}
+      <main
+        className={`hidden md:block relative bg-white overflow-hidden
+        w-full min-h-[calc(100vh-4rem)]
+        transition-all duration-500
+        ${isActive ? 'active' : ''}`}
+      >
         <div
-          className={`hidden md:block relative bg-white overflow-hidden
+          className={`relative bg-white overflow-hidden
           w-full min-h-[calc(100vh-4rem)]
           transition-all duration-500
           ${isActive ? 'active' : ''}`}
         >
 
-          {/* ================= SIGN UP FORM ================= */}
+          {/* ================= SIGN UP FORM (Desktop) ================= */}
           <div
             className={`
               form-container sign-up
@@ -157,7 +160,7 @@ export default function LoginPage() {
           </div>
 
 
-          {/* ================= SIGN IN FORM ================= */}
+          {/* ================= SIGN IN FORM (Desktop) ================= */}
           <div
             className={`
               form-container sign-in
@@ -205,7 +208,7 @@ export default function LoginPage() {
           </div>
 
 
-          {/* ================= TOGGLE CONTAINER ================= */}
+          {/* ================= TOGGLE CONTAINER (Desktop) ================= */}
           <div
             className={`
               toggle-container
@@ -299,7 +302,6 @@ export default function LoginPage() {
           </div>
 
         </div>
-
       </main>
     </>
   );
