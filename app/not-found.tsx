@@ -1,22 +1,10 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "../components/layout/Header/Header";
 import { notFoundAnimations } from "../components/animations/notFound";
-import LostTravelerAnimation from "../components/animations/notFound/LostTravelerAnimation";
 
 export default function NotFound() {
-  const [RandomAnimation, setRandomAnimation] = useState<any>(null);
-
-  useEffect(() => {
-    // পেজ ক্লায়েন্ট সাইডে লোড হওয়ার পর র্যান্ডমলি একটি অ্যানিমেশন সিলেক্ট করবে
-    const randomIndex = Math.floor(Math.random() * notFoundAnimations.length);
-    setRandomAnimation(() => notFoundAnimations[randomIndex]);
-  }, []);
-
-  // যতক্ষণ না সিলেক্ট হচ্ছে, ডিফল্টভাবে একটি অ্যানিমেশন দেখাবে
-  const SelectedAnimation = RandomAnimation || LostTravelerAnimation;
+  // পেজ লোড হওয়ার সময় সরাসরি অ্যারে থেকে যেকোনো একটি র্যান্ডম অ্যানিমেশন বেছে নেবে
+  const RandomAnimation = notFoundAnimations[Math.floor(Math.random() * notFoundAnimations.length)];
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
@@ -32,8 +20,8 @@ export default function NotFound() {
             404
           </h1>
 
-          {/* ডাইনামিক র্যান্ডম অ্যানিমেশন রেন্ডার হবে */}
-          <SelectedAnimation />
+          {/* ডাইরেক্ট যেকোনো একটি র্যান্ডম অ্যানিমেশন রেন্ডার হবে */}
+          <RandomAnimation />
 
           {/* নিচের টেক্সট এবং হোম পেজে যাওয়ার বাটন */}
           <div className="mt-4">
