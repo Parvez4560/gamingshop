@@ -146,6 +146,9 @@ export default function LoginPage() {
               rounded-b-[30px]
               md:rounded-b-none
 
+              sticky md:absolute
+              top-0
+
               ${
                 isActive
                   ? 'md:-translate-x-full md:rounded-r-[50px] md:rounded-l-none'
