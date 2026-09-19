@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import FloatingInput from '@/components/FloatingInput';
-import Header from "@/components/layout/Header/Header";
+import Header from '@/components/layout/Header/Header';
 
 export default function LoginPage() {
   const [isActive, setIsActive] = useState(false);
