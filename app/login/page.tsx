@@ -9,13 +9,14 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* পেজের একদম উপরে হেডারটি যুক্ত করা হলো যাতে হোমপেজে ফেরা যায় */}
+      {/* হেডারটি পেজের উপরে ফিক্সড থাকবে */}
       <Header />
 
-      <main className="min-h-[calc(100vh-4rem)] bg-white">
+      {/* মূল কন্টেইনার যা হেডারের নিচের বাকি স্ক্রিনটুকু দখল করবে এবং বাইরে স্ক্রোল হওয়া আটকাবে */}
+      <main className="h-[calc(100vh-4rem)] w-full overflow-hidden bg-white relative">
         <div
           className={`relative bg-white overflow-hidden
-          w-full min-h-[calc(100vh-4rem)]
+          w-full h-full
           flex flex-col md:block
           transition-all duration-500
           ${isActive ? 'active' : ''}`}
