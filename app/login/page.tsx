@@ -42,7 +42,7 @@ export default function LoginPage() {
             }
           `}
         >
-          <form className="bg-white flex items-center justify-center flex-col px-6 md:px-10 h-full py-8 md:py-0 text-center">
+          <form className="bg-white flex items-center justify-center flex-col px-6 md:px-10 h-full py-8 md:py-0 text-center w-full">
 
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Create Account
@@ -89,7 +89,7 @@ export default function LoginPage() {
             }
           `}
         >
-          <form className="bg-white flex items-center justify-center flex-col px-6 md:px-10 h-full py-8 md:py-0 text-center">
+          <form className="bg-white flex items-center justify-center flex-col px-6 md:px-10 h-full py-8 md:py-0 text-center w-full">
 
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Gaming Shop Login

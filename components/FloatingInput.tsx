@@ -1,4 +1,4 @@
-// components/FloatingInput.jsx (বা আপনার পছন্দমতো ফোল্ডারে)
+
 export default function FloatingInput({ type, id, label, value, onChange, required = true }) {
   return (
     <div className="relative my-2 w-full">
