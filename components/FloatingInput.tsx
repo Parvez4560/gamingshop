@@ -1,5 +1,21 @@
+// TypeScript ইন্টারফেস ডিফাইন করা হলো
+interface FloatingInputProps {
+  type: string;
+  id: string;
+  label: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
+}
 
-export default function FloatingInput({ type, id, label, value, onChange, required = true }) {
+export default function FloatingInput({
+  type,
+  id,
+  label,
+  value,
+  onChange,
+  required = true,
+}: FloatingInputProps) {
   return (
     <div className="relative my-2 w-full">
       <input
