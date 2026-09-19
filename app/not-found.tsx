@@ -5,7 +5,6 @@ import Link from "next/link";
 import Header from "../components/layout/Header/Header";
 import { notFoundAnimations } from "../components/animations/notFound";
 import LostTravelerAnimation from "../components/animations/notFound/LostTravelerAnimation";
-import ConfusedGnomeAnimation from "../components/animations/notFound/ConfusedGnomeAnimation";
 
 export default function NotFound() {
   const [RandomAnimation, setRandomAnimation] = useState<any>(null);

@@ -1,8 +1,10 @@
 import LostTravelerAnimation from "./LostTravelerAnimation";
-import ConfusedGnomeAnimation from "./ConfusedGnomeAnimation";
+import BrokenRobotAnimation from "./BrokenRobotAnimation";
+import SpaceLostAnimation from "./SpaceLostAnimation";
 
-// সব অ্যানিমেশনের একটি তালিকা (List)
+// তিনটি অ্যানিমেশনের তালিকা
 export const notFoundAnimations = [
   LostTravelerAnimation,
-  ConfusedGnomeAnimation,
+  BrokenRobotAnimation,
+  SpaceLostAnimation,
 ];
