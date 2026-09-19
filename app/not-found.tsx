@@ -1,7 +1,24 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "../components/layout/Header/Header";
+import { notFoundAnimations } from "../components/animations/notFound";
+import LostTravelerAnimation from "../components/animations/notFound/LostTravelerAnimation";
+import ConfusedGnomeAnimation from "../components/animations/notFound/ConfusedGnomeAnimation";
 
 export default function NotFound() {
+  const [RandomAnimation, setRandomAnimation] = useState<any>(null);
+
+  useEffect(() => {
+    // পেজ ক্লায়েন্ট সাইডে লোড হওয়ার পর র্যান্ডমলি একটি অ্যানিমেশন সিলেক্ট করবে
+    const randomIndex = Math.floor(Math.random() * notFoundAnimations.length);
+    setRandomAnimation(() => notFoundAnimations[randomIndex]);
+  }, []);
+
+  // যতক্ষণ না সিলেক্ট হচ্ছে, ডিফল্টভাবে একটি অ্যানিমেশন দেখাবে
+  const SelectedAnimation = RandomAnimation || LostTravelerAnimation;
+
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
       {/* ওয়েবসাইটের মূল হেডার */}
@@ -11,18 +28,13 @@ export default function NotFound() {
       <section className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl w-full text-center">
           
-          {/* বড় করে পরিষ্কার 404 হেডিং (অ্যানিমেশনের উপরে) */}
+          {/* 404 হেডিং */}
           <h1 className="text-6xl sm:text-7xl font-black text-gray-800 tracking-wider mb-2">
             404
           </h1>
 
-          {/* অ্যানিমেটেড জিআইএফ ব্যাকগ্রাউন্ড */}
-          <div 
-            className="bg-center bg-no-repeat h-[300px] w-full bg-contain mx-auto"
-            style={{
-              backgroundImage: "url('https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif')"
-            }}
-          ></div>
+          {/* ডাইনামিক র্যান্ডম অ্যানিমেশন রেন্ডার হবে */}
+          <SelectedAnimation />
 
           {/* নিচের টেক্সট এবং হোম পেজে যাওয়ার বাটন */}
           <div className="mt-4">
