@@ -54,17 +54,17 @@ export default function LoginPage() {
               className="bg-gray-100 border-none my-1 py-3 px-4 text-xs rounded-lg w-full outline-none text-gray-900"
             />
 
-            <div className="relative my-1 w-full">
+  <div className="relative my-2 w-full">
   <input
     type="email"
-    id="unique-id-here"
+    id="test-email"
     placeholder=" "
     required
-    className="peer bg-gray-100 border-none pt-5 pb-2 px-4 text-xs rounded-lg w-full outline-none text-gray-900 placeholder-transparent"
+    className="peer block px-4 py-3.5 w-full text-xs text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#81007f] peer"
   />
   <label
-    htmlFor="unique-id-here"
-    className="absolute text-gray-500 text-xs duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 pointer-events-none"
+    htmlFor="test-email"
+    className="absolute text-xs text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-[#81007f] left-3"
   >
     Email
   </label>
