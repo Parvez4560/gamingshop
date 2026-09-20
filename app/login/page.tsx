@@ -22,10 +22,8 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* হেডার সবার উপরে ফিক্সড */}
       <Header />
 
-      {/* মূল কন্টেইনার */}
       <main className="h-[calc(100vh-4rem)] w-full overflow-hidden bg-white relative flex flex-col md:block">
         
         {/* ================= MOBILE & DESKTOP TOGGLE CONTAINER ================= */}
@@ -196,10 +194,18 @@ export default function LoginPage() {
                     id="signup-password" 
                     label="Password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      // ইউজার টাইপ করা শুরু করলেই বক্সটি অটোমেটিক ওপেন হয়ে যাবে
+                      if (e.target.value.length > 0) {
+                        setShowPasswordRules(true);
+                      } else {
+                        setShowPasswordRules(false);
+                      }
+                    }}
                   />
                   
-                  {/* ডান পাশের ইনফো আইকন */}
+                  {/* ডান পাশের ইনফো আইকন (আইকনে চাপ দিয়েও ওপেন/ক্লোজ করা যাবে) */}
                   <button
                     type="button"
                     onClick={() => setShowPasswordRules(!showPasswordRules)}
