@@ -7,25 +7,16 @@ import Header from '@/components/layout/Header/Header';
 export default function LoginPage() {
   const [isActive, setIsActive] = useState(false);
 
-  // পাসওয়ার্ড এবং রুলস বক্সের জন্য স্টেট
-  const [password, setPassword] = useState('');
-  const [showPasswordRules, setShowPasswordRules] = useState(false);
-
-  // পাসওয়ার্ড শর্তগুলো চেক করার লজিক
-  const validations = {
-    length: password.length >= 8,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /[0-9]/.test(password),
-    noSpace: !/\s/.test(password) && password.length > 0,
-  };
-
   return (
     <>
+      {/* হেডার সবার উপরে ফিক্সড (z-50 বা তার বেশি) */}
       <Header />
 
+      {/* মূল কন্টেইনার */}
       <main className="h-[calc(100vh-4rem)] w-full overflow-hidden bg-white relative flex flex-col md:block">
         
+        {/* ================= MOBILE & DESKTOP TOGGLE CONTAINER ================= */}
+        {/* z-index কমিয়ে z-2 করা হলো যাতে মেনু (z-50+) ওপেন হলে টগল বাটন মেনুর নিচে ঢাকা থাকে */}
         {/* ================= MOBILE & DESKTOP TOGGLE CONTAINER ================= */}
         <div
           className={`
@@ -57,6 +48,7 @@ export default function LoginPage() {
               w-[200%]
               transition-all duration-500 ease-in-out
               hidden md:block
+
               ${isActive ? 'translate-x-1/2' : 'translate-x-0'}
             `}
           >
@@ -73,7 +65,12 @@ export default function LoginPage() {
                 text-center
                 top-0
                 transition-all duration-500 ease-in-out
-                ${isActive ? 'translate-x-0' : '-translate-x-[200%]'}
+
+                ${
+                  isActive
+                    ? 'translate-x-0'
+                    : '-translate-x-[200%]'
+                }
               `}
             >
               <h1 className="text-2xl font-bold mb-2">
@@ -105,7 +102,12 @@ export default function LoginPage() {
                 text-center
                 top-0
                 transition-all duration-500 ease-in-out
-                ${isActive ? 'translate-x-[200%]' : 'translate-x-0'}
+
+                ${
+                  isActive
+                    ? 'translate-x-[200%]'
+                    : 'translate-x-0'
+                }
               `}
             >
               <h1 className="text-2xl font-bold mb-2">
@@ -160,6 +162,7 @@ export default function LoginPage() {
               absolute top-0 h-full w-full md:w-1/2 left-0
               transition-all duration-500 ease-in-out
               z-10
+
               ${
                 isActive
                   ? `
@@ -185,62 +188,7 @@ export default function LoginPage() {
 
               <FloatingInput type="text" id="signup-name" label="Name" />
               <FloatingInput type="email" id="signup-email" label="Email" />
-
-              {/* পাসওয়ার্ড ফিল্ড এবং ডানপাশে ইনফো আইকন */}
-              <div className="relative w-full mb-3">
-                <div className="relative">
-                  <FloatingInput 
-                    type="password" 
-                    id="signup-password" 
-                    label="Password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      // ইউজার টাইপ করা শুরু করলেই বক্সটি অটোমেটিক ওপেন হয়ে যাবে
-                      if (e.target.value.length > 0) {
-                        setShowPasswordRules(true);
-                      } else {
-                        setShowPasswordRules(false);
-                      }
-                    }}
-                  />
-                  
-                  {/* ডান পাশের ইনফো আইকন (আইকনে চাপ দিয়েও ওপেন/ক্লোজ করা যাবে) */}
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswordRules(!showPasswordRules)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#81007f] transition p-1 z-10 cursor-pointer"
-                    title="Password requirements"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* শর্তগুলোর পপআপ বক্স */}
-                {showPasswordRules && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-3 text-left z-30 text-xs space-y-1.5">
-                    <p className="font-semibold text-gray-700 mb-1">Password must contain:</p>
-                    
-                    <div className={`flex items-center gap-2 ${validations.length ? 'text-green-600' : 'text-gray-500'}`}>
-                      <span>{validations.length ? '✅' : '❌'}</span> At least 8 characters
-                    </div>
-                    <div className={`flex items-center gap-2 ${validations.uppercase ? 'text-green-600' : 'text-gray-500'}`}>
-                      <span>{validations.uppercase ? '✅' : '❌'}</span> At least 1 uppercase letter (A–Z)
-                    </div>
-                    <div className={`flex items-center gap-2 ${validations.lowercase ? 'text-green-600' : 'text-gray-500'}`}>
-                      <span>{validations.lowercase ? '✅' : '❌'}</span> At least 1 lowercase letter (a–z)
-                    </div>
-                    <div className={`flex items-center gap-2 ${validations.number ? 'text-green-600' : 'text-gray-500'}`}>
-                      <span>{validations.number ? '✅' : '❌'}</span> At least 1 number (0–9)
-                    </div>
-                    <div className={`flex items-center gap-2 ${validations.noSpace ? 'text-green-600' : 'text-gray-500'}`}>
-                      <span>{validations.noSpace ? '✅' : '❌'}</span> No spaces
-                    </div>
-                  </div>
-                )}
-              </div>
+              <FloatingInput type="password" id="signup-password" label="Password" />
 
               <button
                 type="submit"
@@ -259,6 +207,7 @@ export default function LoginPage() {
               absolute top-0 h-full w-full md:w-1/2 left-0
               transition-all duration-500 ease-in-out
               z-20
+
               ${
                 isActive
                   ? `
