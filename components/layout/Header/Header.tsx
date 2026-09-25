@@ -17,7 +17,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-3">
             <div className="h-10 w-10">
               <Image
-                src="/gamingshop.svg"
+                src="/ui/gamingshop.svg"
                 alt="Gaming Shop"
                 width={40}
                 height={40}
@@ -45,7 +45,7 @@ export default function Header() {
               className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <Image
-                src="/menu.svg"
+                src="/ui/menu.svg"
                 alt="Menu Icon"
                 width={20}
                 height={20}

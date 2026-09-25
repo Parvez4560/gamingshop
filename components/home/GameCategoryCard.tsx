@@ -43,7 +43,7 @@ export default function GameCategoryCard({ game }: GameCategoryCardProps) {
         {/* অ্যারো বাটন (public ফোল্ডারের SVG সহ) */}
 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 transition-colors group-hover:bg-black">
   <Image
-    src="/right-arrow.svg"
+    src="/ui/right-arrow.svg"
     alt="Right Arrow Icon"
     width={20}
     height={20}

@@ -41,7 +41,7 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
             onClick={onClose}
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
           >
-            <Image src="/home.svg" alt="Home" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/ui/home.svg" alt="Home" width={20} height={20} className="h-5 w-5 object-contain" />
             Home
           </Link>
 
@@ -51,7 +51,7 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
             onClick={onClose}
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
           >
-            <Image src="/shopping-card.svg" alt="Orders" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/ui/shopping-card.svg" alt="Orders" width={20} height={20} className="h-5 w-5 object-contain" />
             Track Order
           </Link>
 
@@ -61,7 +61,7 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
             onClick={onClose}
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
           >
-            <Image src="/support.svg" alt="Support" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/ui/support.svg" alt="Support" width={20} height={20} className="h-5 w-5 object-contain" />
             Support / Help
           </Link>
 
@@ -71,7 +71,7 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
             onClick={onClose}
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
           >
-            <Image src="/coc-layout.svg" alt="COC Layout" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/ui/coc-layout.svg" alt="COC Layout" width={20} height={20} className="h-5 w-5 object-contain" />
             COC Layout
           </Link>
           
@@ -81,7 +81,7 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
             onClick={onClose}
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
           >
-            <Image src="/logout.svg" alt="Logout" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/ui/logout.svg" alt="Logout" width={20} height={20} className="h-5 w-5 object-contain" />
             Log Out
           </Link>
 
