@@ -1,4 +1,4 @@
-export const homeHalls = Array.from({ length: 16 }, (_, i) => {
+export const homeHalls = Array.from({ length: 17 }, (_, i) => {
   const thNumber = 18 - i;
   return {
     id: `th-${thNumber}`,
