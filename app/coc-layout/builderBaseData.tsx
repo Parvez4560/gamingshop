@@ -1,4 +1,4 @@
-export const builderHalls = Array.from({ length: 10 }, (_, i) => {
+export const builderHalls = Array.from({ length: 9 }, (_, i) => {
   const bhNumber = 10 - i;
   return {
     id: `bh-${bhNumber}`,
