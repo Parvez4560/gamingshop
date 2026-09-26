@@ -1,31 +1,35 @@
-'use client'; // যেহেতু সাব-বারের ক্লিকের জন্য স্টেট ব্যবহার করা হচ্ছে, তাই পেজটি ক্লায়েন্ট কম্পোনেন্ট হবে
+'use client'; 
 
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/layout/Header/Header';
 
+// একই ফোল্ডারে থাকা ডাটা ফাইলগুলো ইমপোর্ট করা হলো
+import { homeHalls } from './homeVillageData';
+import { builderHalls } from './builderBaseData';
+import { capitalHalls } from './capitalPeakData';
+
 export default function TownHallSelectionPage() {
-  // কোন ভিলেজটি সিলেক্ট করা আছে তার স্টেট (ডিফল্ট: home-village)
   const [activeVillage, setActiveVillage] = useState('home-village');
 
-  // TH-18 থেকে TH-3 পর্যন্ত ডাইনামিকালি অ্যারে তৈরি করা
-  const townHalls = Array.from({ length: 16 }, (_, i) => {
-    const thNumber = 18 - i; // ১৮ থেকে শুরু হয়ে ৩ পর্যন্ত নামবে
-    return {
-      id: `th-${thNumber}`,
-      name: `Town Hall ${thNumber}`,
-      image: `/coc/home-village/town-hall/Town_Hall_${thNumber}.webp`
-    };
-  });
+  // বর্তমান ট্যাব অনুযায়ী সঠিক ডাটা সিলেক্ট করা
+  const getCurrentItems = () => {
+    if (activeVillage === 'home-village') return homeHalls;
+    if (activeVillage === 'builder-base') return builderHalls;
+    if (activeVillage === 'capital-peak') return capitalHalls;
+    return homeHalls;
+  };
+
+  const currentItems = getCurrentItems();
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* ১. মূল হেডার বার */}
+      {/* ১. মূল হেডার বার (sticky top-0) */}
       <Header />
 
-      {/* ২. দ্বিতীয় সাব-বার (Home Village, Builder Base, Capital Peak) */}
-      <div className="w-full bg-white border-b border-gray-200 shadow-sm py-3 px-4">
+      {/* ২. দ্বিতীয় সাব-বার (sticky top-16 দিয়ে হেডারের নিচে আটকে রাখা হয়েছে) */}
+      <div className="sticky top-16 z-40 w-full bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm py-3 px-4 transition-all">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 sm:gap-6">
           <button
             onClick={() => setActiveVillage('home-village')}
@@ -66,44 +70,44 @@ export default function TownHallSelectionPage() {
         
         {/* পেজের শিরোনাম */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Select Your Town Hall
+          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl capitalize">
+            Select Your {activeVillage.replace('-', ' ')}
           </h1>
         </div>
 
-        {/* টাউন হল কার্ডগুলোর গ্রিড */}
+        {/* কার্ডগুলোর গ্রিড */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {townHalls.map((th) => (
+          {currentItems.map((item) => (
             <Link
-              key={th.id}
-              href={`/clash-of-clans/${th.id}`}
+              key={item.id}
+              href={item.route}
               className="group bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow-md hover:border-[#81007f] transition-all duration-300 flex flex-col items-center text-center cursor-pointer"
             >
-              {/* টাউন হলের ছবি বা আইকন */}
+              {/* ছবি */}
               <div className="relative w-24 h-24 mb-4 transition-transform duration-300 group-hover:scale-105">
                 <Image
-                  src={th.image}
-                  alt={th.name}
+                  src={item.image}
+                  alt={item.name}
                   fill
                   className="object-contain"
                 />
               </div>
 
-              {/* টাউন হলের নাম */}
+              {/* নাম */}
               <span className="text-base font-bold text-gray-800 group-hover:text-[#81007f] transition-colors">
-                {th.name}
+                {item.name}
               </span>
               
               <div className="mt-2 flex items-center gap-1 text-xs text-gray-500 group-hover:text-[#81007f] transition-colors">
-              <span>View Layouts</span>
-               <Image
-                src="/ui/right-arrow.svg"
-                alt="Arrow Icon"
-                width={14}
-                height={14}
-                className="transition-transform duration-300 group-hover:translate-x-1"
+                <span>View Layouts</span>
+                <Image
+                  src="/ui/right-arrow.svg"
+                  alt="Arrow Icon"
+                  width={14}
+                  height={14}
+                  className="transition-transform duration-300 group-hover:translate-x-1"
                 />
-               </div>
+              </div>
             </Link>
           ))}
         </div>
