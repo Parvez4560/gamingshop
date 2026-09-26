@@ -94,9 +94,16 @@ export default function TownHallSelectionPage() {
                 {th.name}
               </span>
               
-              <span className="mt-1 text-xs text-gray-400 group-hover:text-gray-600">
-                View Layouts →
-              </span>
+              <div className="mt-2 flex items-center gap-1 text-xs text-gray-500 group-hover:text-[#81007f] transition-colors">
+              <span>View Layouts</span>
+               <Image
+                src="/ui/right-arrow.svg"
+                alt="Arrow Icon"
+                width={14}
+                height={14}
+                className="transition-transform duration-300 group-hover:translate-x-1"
+                />
+               </div>
             </Link>
           ))}
         </div>
