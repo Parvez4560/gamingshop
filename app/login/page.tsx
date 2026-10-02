@@ -20,9 +20,6 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // ব্যাকএন্ড API এর বেস URL (.env থেকে অথবা সরাসরি)
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gaming-shop-7jep.onrender.com/api";
-
   // রেজিস্ট্রেশন হ্যান্ডলার
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +28,10 @@ export default function LoginPage() {
     setSuccessMessage('');
 
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
+      const response = await fetch('/backend-api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(signupData),
+        body: JSON.stringify(signinData),
       });
 
       const data = await response.json();
@@ -61,7 +58,7 @@ export default function LoginPage() {
     setSuccessMessage('');
 
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await fetch('/backend-api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(signinData),
