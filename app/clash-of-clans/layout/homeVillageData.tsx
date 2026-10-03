@@ -4,6 +4,6 @@ export const homeHalls = Array.from({ length: 17 }, (_, i) => {
     id: `th-${thNumber}`,
     name: `Town Hall ${thNumber}`,
     image: `/coc/home-village/town-hall/Town_Hall_${thNumber}.webp`,
-    route: `/clash-of-clans/th-${thNumber}`
+    route: `/clash-of-clans/home-village/th-${thNumber}`
   };
 });
