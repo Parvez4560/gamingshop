@@ -11,7 +11,7 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // ✅ ইউজার অলরেডি লগইন করা থাকলে তাকে লগইন পেজে ঢুকতে না দিয়ে ড্যাশবোর্ডে পাঠিয়ে দেওয়া
+  // Redirect to dashboard if already authenticated
   useEffect(() => {
     const token = localStorage.getItem('admin_auth_token');
     if (token) {
@@ -41,21 +41,21 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'লগইন করতে সমস্যা হয়েছে!');
+        throw new Error(data.message || 'Failed to login!');
       }
 
       if (data.success) {
         localStorage.setItem('admin_auth_token', data.token);
-        setSuccessMsg('লগইন সফল হয়েছে! ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে...');
+        setSuccessMsg('Login successful! Redirecting to dashboard...');
         
         setTimeout(() => {
           router.push('/admin/dashboard');
         }, 1000);
       } else {
-        setErrorMsg(data.message || "লগইন ব্যর্থ হয়েছে!");
+        setErrorMsg(data.message || "Login failed!");
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "সার্ভারে সংযোগ স্থাপন করা যাচ্ছে না!");
+      setErrorMsg(err.message || "Unable to connect to the server!");
     } finally {
       setLoading(false);
     }
@@ -80,8 +80,8 @@ export default function AdminLoginPage() {
         maxWidth: '420px'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <h2 style={{ color: '#0f172a', fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>অ্যাডমিন প্যানেল</h2>
-          <p style={{ color: '#64748b', fontSize: '14px' }}>আপনার সিকিউর ড্যাশবোর্ডে প্রবেশ করুন</p>
+          <h2 style={{ color: '#0f172a', fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>Admin Panel</h2>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>Sign in to your secure dashboard</p>
         </div>
         
         {errorMsg && (
@@ -98,7 +98,7 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleAdminLogin}>
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>ইমেইল অ্যাড্রেস</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Email Address</label>
             <input 
               type="email" 
               value={email} 
@@ -110,7 +110,7 @@ export default function AdminLoginPage() {
           </div>
 
           <div style={{ marginBottom: '25px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>পাসওয়ার্ড</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Password</label>
             <input 
               type="password" 
               value={password} 
@@ -126,7 +126,7 @@ export default function AdminLoginPage() {
             disabled={loading}
             style={{ width: '100%', padding: '13px', background: loading ? '#d8b4fe' : '#81007f', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}
           >
-            {loading ? "যাচাই করা হচ্ছে..." : "লগইন করুন"}
+            {loading ? "Verifying..." : "Login"}
           </button>
         </form>
       </div>

@@ -15,12 +15,13 @@ export default function Header() {
 
           {/* Logo & Name */}
           <Link href="/" className="flex items-center gap-3">
-            <div className="h-10 w-10">
+            <div className="h-10 w-10 relative">
               <Image
                 src="/ui/gamingshop.svg"
                 alt="Gaming Shop"
                 width={40}
                 height={40}
+                className="object-contain"
               />
             </div>
 
@@ -49,7 +50,7 @@ export default function Header() {
                 alt="Menu Icon"
                 width={20}
                 height={20}
-                className="h-5 w-5"
+                className="h-5 w-5 object-contain"
               />
             </button>
           </div>

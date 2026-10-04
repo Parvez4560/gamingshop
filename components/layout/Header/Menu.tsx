@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 
@@ -7,18 +9,26 @@ interface MenuProps {
 }
 
 export default function Menu({ isOpen, onClose }: MenuProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex">
+    <div
+      className={`fixed inset-0 z-50 flex transition-colors duration-300 ${
+        isOpen ? "pointer-events-auto" : "pointer-events-none"
+      }`}
+    >
       {/* ব্যাকগ্রাউন্ড ব্লার ওভারলে */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0"
+        }`}
         onClick={onClose}
       />
 
-      {/* সাইড মেনু প্যানেল */}
-      <div className="relative ml-auto flex h-full w-80 flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out">
+      {/* সাইড মেনু প্যানেল (ডান দিক থেকে স্মুথ স্লাইড হয়ে আসবে) */}
+      <div 
+        className={`relative ml-auto flex h-full w-80 flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out z-10 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
         
         {/* মেনু হেডার ও ক্লোজ বাটন */}
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
