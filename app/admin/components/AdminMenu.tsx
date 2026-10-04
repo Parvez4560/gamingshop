@@ -13,27 +13,35 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  if (!isOpen) return null;
-
   const handleLogout = () => {
     localStorage.removeItem('admin_auth_token');
     router.replace('/admin/login');
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex">
+    <div
+      className={`fixed inset-0 z-50 flex transition-colors duration-300 ${
+        isOpen ? "pointer-events-auto" : "pointer-events-none"
+      }`}
+    >
       {/* ব্যাকগ্রাউন্ড ব্লার ওভারলে */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0"
+        }`}
         onClick={onClose}
       />
 
-      {/* সাইড মেনু প্যানেল (ডান দিক থেকে স্লাইড হয়ে আসবে) */}
-      <div className="relative ml-auto flex h-full w-80 flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out">
+      {/* সাইড মেনু প্যানেল (ডান দিক থেকে স্মুথ স্লাইড হয়ে আসবে) */}
+      <div 
+        className={`relative ml-auto flex h-full w-80 flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out z-10 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
         
         {/* মেনু হেডার ও ক্লোজ বাটন */}
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
-          <span className="text-lg font-bold text-gray-900">Menu</span>
+          <span className="text-lg font-bold text-gray-900">Admin Menu</span>
           <button
             type="button"
             onClick={onClose}
@@ -71,15 +79,15 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
             }`}
           >
             <Image src="/ui/shopping-card.svg" alt="Posts" width={20} height={20} className="h-5 w-5 object-contain" />
-            পোস্ট ম্যানেজমেন্ট
+            Posts Management
           </Link>
 
-          {/* COC Layout (আপনার চাহিদা অনুযায়ী যুক্ত করা হলো) */}
+          {/* COC Layout */}
           <Link
-            href="/admin/coc-layout"
+            href="/admin/clash-of-clans/layout"
             onClick={onClose}
             className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-colors ${
-              pathname === '/admin/coc-layout' 
+              pathname === '/admin/clash-of-clans/layout' 
                 ? 'bg-blue-50 text-blue-600 font-semibold' 
                 : 'text-gray-700 hover:bg-gray-100 hover:text-black'
             }`}
@@ -99,7 +107,7 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
             }`}
           >
             <Image src="/ui/support.svg" alt="Settings" width={20} height={20} className="h-5 w-5 object-contain" />
-            সেটিংস
+            Settings
           </Link>
           
         </div>
@@ -114,7 +122,7 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
             className="w-full flex items-center justify-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
           >
             <Image src="/ui/logout.svg" alt="Logout" width={20} height={20} className="h-5 w-5 object-contain" />
-            লগআউট করুন
+            Log Out
           </button>
         </div>
 
