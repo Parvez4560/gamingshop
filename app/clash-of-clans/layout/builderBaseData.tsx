@@ -4,6 +4,6 @@ export const builderHalls = Array.from({ length: 9 }, (_, i) => {
     id: `bh-${bhNumber}`,
     name: `Builder Hall ${bhNumber}`,
     image: `/coc/builder-base/builder-hall/Builder_Hall_${bhNumber}.webp`,
-    route: `/clash-of-clans/builder-base/bh-${bhNumber}`
+    route: `/clash-of-clans/layout/builder-base/builder-hall-${bhNumber}`
   };
 });

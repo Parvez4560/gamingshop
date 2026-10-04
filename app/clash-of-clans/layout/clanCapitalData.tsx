@@ -3,7 +3,7 @@ export const capitalHalls = Array.from({ length: 10 }, (_, i) => {
   return {
     id: `capital-hall-${hallNum}`,
     name: `Capital Hall ${hallNum}`,
-    image: `/coc/capital-peak/all-hall/capital-hall/Capital_Hall_${hallNum}.webp`,
-    route: `/clash-of-clans/capital-peak/capital-hall-${hallNum}`
+    image: `/coc/clan-capital/all-hall/capital-hall/Capital_Hall_${hallNum}.webp`,
+    route: `/clash-of-clans/layout/clan-capital/capital-hall-${hallNum}`
   };
 });

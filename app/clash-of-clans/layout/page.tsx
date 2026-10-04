@@ -8,7 +8,7 @@ import Header from '@/components/layout/Header/Header';
 // একই ফোল্ডারে থাকা ডাটা ফাইলগুলো ইমপোর্ট করা হলো
 import { homeHalls } from './homeVillageData';
 import { builderHalls } from './builderBaseData';
-import { capitalHalls } from './capitalPeakData';
+import { capitalHalls } from './clanCapitalData';
 
 export default function TownHallSelectionPage() {
   const [activeVillage, setActiveVillage] = useState('home-village');
@@ -17,7 +17,7 @@ export default function TownHallSelectionPage() {
   const getCurrentItems = () => {
     if (activeVillage === 'home-village') return homeHalls;
     if (activeVillage === 'builder-base') return builderHalls;
-    if (activeVillage === 'capital-peak') return capitalHalls;
+    if (activeVillage === 'clan-capital') return capitalHalls;
     return homeHalls;
   };
 
@@ -54,14 +54,14 @@ export default function TownHallSelectionPage() {
           </button>
 
           <button
-            onClick={() => setActiveVillage('capital-peak')}
+            onClick={() => setActiveVillage('clan-capital')}
             className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${
               activeVillage === 'capital-peak'
                 ? 'bg-[#81007f] text-white shadow-md'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Capital Peak
+            Clan Capital
           </button>
         </div>
       </div>
