@@ -32,15 +32,20 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
         
         {/* মেনু হেডার ও ক্লোজ বাটন */}
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
-          <span className="text-lg font-bold text-gray-900">Menu</span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
-          >
-            ✕
-          </button>
-        </div>
+  <span className="text-lg font-bold text-gray-900">Admin Menu</span>
+
+  <button
+    type="button"
+    onClick={onClose}
+    className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+  >
+    <img
+      src="/icons/ui/actions/close.svg"
+      alt="Close"
+      className="h-5 w-5"
+    />
+  </button>
+</div>
 
         {/* মেনু লিংকসমূহ */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
