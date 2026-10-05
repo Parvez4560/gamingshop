@@ -64,22 +64,8 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
                 : 'text-gray-700 hover:bg-gray-100 hover:text-black'
             }`}
           >
-            <Image src="/icons/ui/general/home.svg" alt="Dashboard" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/icons/ui/navigation/home.svg" alt="Dashboard" width={20} height={20} className="h-5 w-5 object-contain" />
             Dashboard
-          </Link>
-
-          {/* Posts Management */}
-          <Link
-            href="/admin/posts"
-            onClick={onClose}
-            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-colors ${
-              pathname === '/admin/posts' 
-                ? 'bg-blue-50 text-blue-600 font-semibold' 
-                : 'text-gray-700 hover:bg-gray-100 hover:text-black'
-            }`}
-          >
-            <Image src="/ui/shopping-card.svg" alt="Posts" width={20} height={20} className="h-5 w-5 object-contain" />
-            Posts Management
           </Link>
 
           {/* COC Layout */}
