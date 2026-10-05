@@ -51,7 +51,7 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
             onClick={onClose}
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
           >
-            <Image src="/ui/home.svg" alt="Home" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/icons/ui/general/home.svg" alt="Home" width={20} height={20} className="h-5 w-5 object-contain" />
             Home
           </Link>
 
@@ -61,7 +61,7 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
             onClick={onClose}
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
           >
-            <Image src="/ui/shopping-card.svg" alt="Orders" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/icons/games/shop/shopping-card.svg" alt="Orders" width={20} height={20} className="h-5 w-5 object-contain" />
             Track Order
           </Link>
 

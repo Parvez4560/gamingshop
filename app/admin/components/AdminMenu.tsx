@@ -64,7 +64,7 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
                 : 'text-gray-700 hover:bg-gray-100 hover:text-black'
             }`}
           >
-            <Image src="/ui/home.svg" alt="Dashboard" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/icons/ui/general/home.svg" alt="Dashboard" width={20} height={20} className="h-5 w-5 object-contain" />
             Dashboard
           </Link>
 
