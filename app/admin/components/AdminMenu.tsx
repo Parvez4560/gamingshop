@@ -5,6 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
+// আপনার ডেটা ফাইলগুলো থেকে ডাইরেক্ট ইমপোর্ট (পাথ আপনার প্রজেক্ট অনুযায়ী ঠিক করে নেবেন)
+import { homeHalls } from '@/app/clash-of-clans/layout/homeVillageData';
+import { builderHalls } from '@/app/clash-of-clans/layout/builderBaseData';
+import { capitalHalls } from '@/app/clash-of-clans/layout/clanCapitalData';
+
 interface MenuProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,8 +19,13 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // COC Layout মেইন ড্রপডাউন ওপেন/ক্লোজ স্টেট
+  // COC Layout মেইন ড্রপডাউন স্টেট
   const [isCocOpen, setIsCocOpen] = useState(false);
+
+  // সাব-ক্যাটাগরিগুলোর আলাদা স্টেট (হোম, বিল্ডার, ক্যাপিটাল)
+  const [isHomeOpen, setIsHomeOpen] = useState(false);
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [isCapitalOpen, setIsCapitalOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('admin_auth_token');
@@ -77,7 +87,7 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
             Dashboard
           </Link>
 
-          {/* COC Layout Dropdown */}
+          {/* COC Layout Dropdown (ডাইরেক্ট অপشن খোলার জন্য) */}
           <div className="space-y-1">
             <button
               type="button"
@@ -89,7 +99,6 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
                 <span>COC Layout</span>
               </div>
               
-              {/* অ্যারো আইকন যা ক্লিক করলে ঘুরবে */}
               <img
                 src="/icons/ui/actions/chevron-down.svg"
                 alt="Toggle Arrow"
@@ -99,42 +108,126 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
               />
             </button>
 
-            {/* এই অংশটুকু নিচ থেকে স্লাইড হয়ে বের হবে */}
-            <div 
-              className={`overflow-hidden transition-all duration-300 ease-in-out pl-4 space-y-1 ${
-                isCocOpen ? "max-h-40 opacity-100 py-1" : "max-h-0 opacity-0 py-0"
-              }`}
-            >
-              {/* ১. Home Village */}
-              <Link
-                href="/admin/clash-of-clans/layout/home-village"
-                onClick={onClose}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <span>🏠</span>
-                <span>Home Village</span>
-              </Link>
+            {/* COC মেইন সাব-মেনু */}
+            {isCocOpen && (
+              <div className="pl-4 space-y-1 pt-1 border-l-2 border-purple-100 ml-3">
+                
+                {/* ১. Home Village Accordion */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsHomeOpen(!isHomeOpen)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-purple-50 hover:text-[#81007f] transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span>🏠</span>
+                      <span>Home Village</span>
+                    </div>
+                    <img
+                      src="/icons/ui/actions/chevron-down.svg"
+                      alt="Arrow"
+                      className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                        isHomeOpen ? "rotate-180" : "rotate-0"
+                      }`}
+                    />
+                  </button>
 
-              {/* ২. Builder Base */}
-              <Link
-                href="/admin/clash-of-clans/layout/builder-base"
-                onClick={onClose}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <span>🏗️</span>
-                <span>Builder Base</span>
-              </Link>
+                  {/* Town Halls List (ডাইরেক্ট এখান থেকেই টাউন হল সিলেক্ট করে পেজে যাওয়া যাবে) */}
+                  {isHomeOpen && (
+                    <div className="pl-6 space-y-1 pt-1 max-h-56 overflow-y-auto">
+                      {homeHalls.map((hall) => (
+                        <Link
+                          key={hall.id}
+                          href={`/admin${hall.route}`}
+                          onClick={onClose}
+                          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-purple-50 hover:text-[#81007f] transition-colors"
+                        >
+                          <img src={hall.image} alt={hall.name} className="h-4 w-4 object-contain" />
+                          <span>{hall.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-              {/* ৩. Clan Capital */}
-              <Link
-                href="/admin/clash-of-clans/layout/clan-capital"
-                onClick={onClose}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <span>⚔️</span>
-                <span>Clan Capital</span>
-              </Link>
-            </div>
+                {/* ২. Builder Base Accordion */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsBuilderOpen(!isBuilderOpen)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-purple-50 hover:text-[#81007f] transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span>🏗️</span>
+                      <span>Builder Base</span>
+                    </div>
+                    <img
+                      src="/icons/ui/actions/chevron-down.svg"
+                      alt="Arrow"
+                      className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                        isBuilderOpen ? "rotate-180" : "rotate-0"
+                      }`}
+                    />
+                  </button>
+
+                  {/* Builder Halls List */}
+                  {isBuilderOpen && (
+                    <div className="pl-6 space-y-1 pt-1 max-h-48 overflow-y-auto">
+                      {builderHalls.map((hall) => (
+                        <Link
+                          key={hall.id}
+                          href={`/admin${hall.route}`}
+                          onClick={onClose}
+                          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-purple-50 hover:text-[#81007f] transition-colors"
+                        >
+                          <img src={hall.image} alt={hall.name} className="h-4 w-4 object-contain" />
+                          <span>{hall.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ৩. Clan Capital Accordion */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsCapitalOpen(!isCapitalOpen)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-purple-50 hover:text-[#81007f] transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span>⚔️</span>
+                      <span>Clan Capital</span>
+                    </div>
+                    <img
+                      src="/icons/ui/actions/chevron-down.svg"
+                      alt="Arrow"
+                      className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                        isCapitalOpen ? "rotate-180" : "rotate-0"
+                      }`}
+                    />
+                  </button>
+
+                  {/* Capital Halls List */}
+                  {isCapitalOpen && (
+                    <div className="pl-6 space-y-1 pt-1 max-h-48 overflow-y-auto">
+                      {capitalHalls.map((hall) => (
+                        <Link
+                          key={hall.id}
+                          href={`/admin${hall.route}`}
+                          onClick={onClose}
+                          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-purple-50 hover:text-[#81007f] transition-colors"
+                        >
+                          <img src={hall.image} alt={hall.name} className="h-4 w-4 object-contain" />
+                          <span>{hall.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
           </div>
 
           {/* Settings */}
