@@ -17,7 +17,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-3">
             <div className="h-10 w-10 relative">
               <Image
-                src="/ui/gamingshop.svg"
+                src="/icons/gamingshop.svg"
                 alt="Gaming Shop"
                 width={40}
                 height={40}

@@ -15,21 +15,21 @@ const gameCategories = [
     name: "Free Fire",
     slug: "free-fire",
     description: "Diamonds & Level-up Pass",
-    image: "/ui/gamingshop.svg",
+    image: "/icons/gamingshop.svg",
   },
   {
     id: 3,
     name: "PUBG Mobile",
     slug: "pubg-mobile",
     description: "UC Top-up & Royale Pass",
-    image: "/ui/gamingshop.svg",
+    image: "/icons/gamingshop.svg",
   },
   {
     id: 4,
     name: "Roblox",
     slug: "roblox",
     description: "Robux & Gift Cards",
-    image: "/ui/gamingshop.svg",
+    image: "/icons/gamingshop.svg",
   },
 ];
 
