@@ -101,7 +101,7 @@ export default function TownHallSelectionPage() {
               <div className="mt-2 flex items-center gap-1 text-xs text-gray-500 group-hover:text-[#81007f] transition-colors">
                 <span>View Layouts</span>
                 <Image
-                  src="/ui/right-arrow.svg"
+                  src="/icons/ui/general/right-arrow.svg"
                   alt="Arrow Icon"
                   width={14}
                   height={14}
