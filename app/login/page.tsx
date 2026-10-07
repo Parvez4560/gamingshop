@@ -28,10 +28,10 @@ export default function LoginPage() {
     setSuccessMessage('');
 
     try {
-      const response = await fetch('/backend-api/auth/login', {
+      const response = await fetch('/backend-api/auth/register', { // এখানে 'login'-এর জায়গায় 'register' হবে
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(signinData),
+        body: JSON.stringify(signupData), // এখানে 'signinData'-এর জায়গায় 'signupData' হবে
       });
 
       const data = await response.json();
