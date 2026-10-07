@@ -27,7 +27,7 @@ export default function Menu({ isOpen, onClose }: MenuProps) {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     onClose();
-    router.push("/login");
+    router.push("/");
   };
 
   return (
