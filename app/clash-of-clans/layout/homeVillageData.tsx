@@ -1,5 +1,5 @@
 export const homeHalls = Array.from({ length: 17 }, (_, i) => {
-  const thNumber = 18 - i;
+  const thNumber = 19 - i;
   return {
     id: `th-${thNumber}`,
     name: `Town Hall ${thNumber}`,

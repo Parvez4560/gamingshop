@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Menu from "./Menu"; // আলাদা করা মেনু ফাইলটি ইমপোর্ট করা হলো
+import Menu from "./Menu";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // পেজ লোড হওয়ার পর টোকেন চেক করা
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   return (
     <>
@@ -32,12 +41,15 @@ export default function Header() {
 
           {/* Login & Menu */}
           <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-base font-bold text-gray-900 antialiased transition-colors hover:text-black"
-            >
-              Login
-            </Link>
+            {/* যদি লগইন করা না থাকে, তবেই Login বাটন দেখাবে */}
+            {!isLoggedIn && (
+              <Link
+                href="/login"
+                className="text-base font-bold text-gray-900 antialiased transition-colors hover:text-black"
+              >
+                Login / Register
+              </Link>
+            )}
 
             <button
               type="button"
@@ -58,7 +70,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* আলাদা করা মোবাইল মেনু কম্পোনেন্ট */}
+      {/* মোবাইল/সাইড মেনু কম্পোনেন্ট */}
       <Menu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </>
   );
