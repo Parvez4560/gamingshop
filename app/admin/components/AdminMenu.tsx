@@ -255,7 +255,7 @@ export default function AdminMenu({ isOpen, onClose }: MenuProps) {
             }}
             className="w-full flex items-center justify-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
           >
-            <Image src="/ui/logout.svg" alt="Logout" width={20} height={20} className="h-5 w-5 object-contain" />
+            <Image src="/icons/ui/general/logout.svg" alt="Logout" width={20} height={20} className="h-5 w-5 object-contain" />
             Log Out
           </button>
         </div>

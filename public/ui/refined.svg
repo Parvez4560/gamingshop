@@ -1,0 +1,9 @@
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- পেছনের লেয়ার বা বক্স -->
+  <path d="M5.5 2.5H12.5C13.0523 2.5 13.5 2.94772 13.5 3.5V10.5" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- সামনের মেইন বক্স ও বাম দিকের নিচে কর্নার ফোল্ড -->
+  <path d="M10.5 13.5H3.5C2.94772 13.5 2.5 13.0523 2.5 12.5V5.5C2.5 4.94772 2.94772 4.5 3.5 4.5H10.5C11.0523 4.5 11.5 4.94772 11.5 5.5V12.5C11.5 13.0523 11.0523 13.5 10.5 13.5Z" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- ফোল্ড বা টেক্সচার ডিটেইল -->
+  <path d="M5.5 8.5H8.5" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.5 10.5H7.5" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
