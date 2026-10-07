@@ -58,7 +58,7 @@ export default function Header() {
               className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <Image
-                src="/icons/ui/general/menu.svg"
+                src="/icons/ui/actions/menu.svg"
                 alt="Menu Icon"
                 width={20}
                 height={20}

@@ -73,7 +73,7 @@ export default function Navbar() {
               className="flex md:hidden h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm"
             >
               <Image
-                src="/icons/ui/general/search.svg"
+                src="/icons/ui/actions/search.svg"
                 alt="Search Icon"
                 width={18}
                 height={18}
@@ -89,7 +89,7 @@ export default function Navbar() {
               className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm"
             >
               <Image
-                src="/icons/ui/general/menu.svg"
+                src="/icons/ui/actions/menu.svg"
                 alt="Menu Icon"
                 width={18}
                 height={18}
