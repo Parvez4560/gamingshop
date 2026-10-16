@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, ChangeEvent } from 'react';
 
-// টাইপ ডেফিনিশন (TypeScript Interfaces)
 interface LimitData {
   minCount?: number;
   maxCount?: number;
@@ -28,40 +27,30 @@ export default function AddGameIdPage() {
   const [playerName, setPlayerName] = useState<string>('');
   const [selectedTownHall, setSelectedTownHall] = useState<string>('');
 
-  const [masterMapping, setMasterMapping] = useState<unknown>(null);
   const [townHallItems, setTownHallItems] = useState<ItemData[]>([]);
-  
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // ইউজারের সিলেক্ট করা আইটেমগুলোর কাউন্ট ও লেভেল স্টেট
   const [userSelections, setUserSelections] = useState<Record<string, UserSelection>>({});
 
-  // ১. পেজ লোড হওয়ার সময় মাস্টার ম্যাপিং ফাইল রিড করা
+  // ১. মাস্টার ম্যাপিং ফেচ
   useEffect(() => {
     async function fetchMasterMapping() {
       try {
-        // ব্যাকএন্ড সার্ভারের সঠিক পোর্ট ও এন্ডপয়েন্ট
-        const res = await fetch('http://localhost:5000/api/coc-guard/mapping?category=home-village');
+        const res = await fetch('/backend-api/coc-guard/mapping?category=home-village');
+        const result = await res.json();
         
         if (!res.ok) {
-          throw new Error(`Route error (${res.status}): মাস্টার ম্যাপিং ফাইল পাওয়া যায়নি`);
+          throw new Error(result.message || 'মাস্টার ম্যাপিং লোড করতে ব্যর্থ হয়েছে');
         }
-
-        const result = await res.json();
-        if (result.success) {
-          setMasterMapping(result.data);
-        }
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          console.error("Master mapping fetch error:", err.message);
-        }
+      } catch (err: any) {
+        console.error("Master mapping fetch error:", err.message);
       }
     }
     fetchMasterMapping();
   }, []);
 
-  // ২. ইউজার টাউন হল পরিবর্তন করলে সার্ভার থেকে ফিল্টার করা আইটেম ও লিমিট নিয়ে আসা
+  // ২. টাউন হল পরিবর্তনের মাধ্যমে আইটেম ফেচ
   const handleTownHallChange = async (e: ChangeEvent<HTMLSelectElement>) => {
     const thValue = e.target.value;
     setSelectedTownHall(thValue);
@@ -73,22 +62,21 @@ export default function AddGameIdPage() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/coc-guard/townhall-items', {
+      const response = await fetch('/backend-api/coc-guard/townhall-items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ townHall: thValue, category: 'home-village' })
       });
 
-      if (!response.ok) {
-        throw new Error(`Server error (${response.status}): টাউন হলের আইটেম ডাটা পাওয়া যায়নি`);
-      }
-
       const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'টাউন হলের ডাটা আনতে সমস্যা হয়েছে');
+      }
       
       if (result.success && Array.isArray(result.items)) {
         setTownHallItems(result.items);
 
-        // সেফ গার্ড দিয়ে প্রতিটি আইটেমের ইনিশিয়াল স্টেট তৈরি করা
         const initialSelections: Record<string, UserSelection> = {};
         result.items.forEach((item: ItemData) => {
           const limits = item.limits || {};
@@ -106,16 +94,13 @@ export default function AddGameIdPage() {
         });
         setUserSelections(initialSelections);
       }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setErrorMessage(err.message);
-      }
+    } catch (err: any) {
+      setErrorMessage(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ৩. সংখ্যা বা কাউন্ট পরিবর্তন করার হ্যান্ডলার
   const handleCountChange = (itemId: string, delta: number) => {
     setUserSelections(prev => {
       const current = prev[itemId];
@@ -133,7 +118,6 @@ export default function AddGameIdPage() {
     });
   };
 
-  // ৪. লেভেল পরিবর্তন করার হ্যান্ডলার
   const handleLevelChange = (itemId: string, levelInput: string) => {
     const newLevel = parseInt(levelInput) || 1;
     setUserSelections(prev => {
@@ -155,14 +139,12 @@ export default function AddGameIdPage() {
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-6">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">গেম অ্যাকাউন্ট ও সার্ভার গার্ড সেটআপ</h2>
 
-      {/* এরর মেসেজ বক্স */}
       {errorMessage && (
         <div className="mb-4 bg-red-100 text-red-600 p-3 rounded-lg text-sm font-semibold">
           {errorMessage}
         </div>
       )}
 
-      {/* ১. ইনপুট ফর্ম সেকশন */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Player Tag</label>
@@ -203,7 +185,6 @@ export default function AddGameIdPage() {
 
       <hr className="my-6" />
 
-      {/* ২. টাউন হল অনুযায়ী ফিল্টার হওয়া বিল্ডিং ও আইটেমের লিস্ট */}
       <div>
         <h3 className="text-xl font-semibold mb-4 text-gray-700">
           {selectedTownHall ? `Town Hall ${selectedTownHall} এর জন্য এভেইলেবল আইটেম ও লিমিট` : "দয়া করে প্রথমে টাউন হল সিলেক্ট করুন"}
@@ -243,9 +224,7 @@ export default function AddGameIdPage() {
                   </div>
                 </div>
 
-                {/* কাউন্ট ও লেভেল কন্ট্রোল */}
                 <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
-                  {/* কাউন্ট বাড়ানোর/কমানোর বাটন */}
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-600">সংখ্যা:</span>
                     <button
@@ -267,7 +246,6 @@ export default function AddGameIdPage() {
                     </button>
                   </div>
 
-                  {/* লেভেল ফিল্ড */}
                   {selection.maxLevel && (
                     <div className="flex items-center space-x-1">
                       <span className="text-sm font-medium text-gray-600">লেভেল:</span>
