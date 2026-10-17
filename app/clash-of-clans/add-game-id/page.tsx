@@ -155,7 +155,7 @@ export default function AddGameIdPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10 relative">
+    <div className="min-h-screen bg-gray-50 pb-16 relative">
       <Navbar />
 
       <main className="max-w-4xl mx-auto p-4 sm:p-6 mt-4">
@@ -175,15 +175,17 @@ export default function AddGameIdPage() {
           </div>
         )}
 
-        {/* 2. Items List */}
+        {/* 2. Loading State */}
         {loading && (
-          <p className="text-center text-[#81007f] font-medium py-6 animate-pulse">
-            Loading data...
-          </p>
+          <div className="text-center py-10">
+            <div className="inline-block w-8 h-8 border-4 border-[#81007f] border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-[#81007f] font-medium mt-2 text-sm">Loading items...</p>
+          </div>
         )}
 
+        {/* 3. Items List (Conditional: Only shows when Town Hall is selected and loading is finished) */}
         {!loading && selectedTownHall && (
-          <div>
+          <div className="animate-in fade-in duration-200">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Town Hall {selectedTownHall} - Available Items
             </h3>
@@ -268,7 +270,7 @@ export default function AddGameIdPage() {
         )}
       </main>
 
-      {/* 3. Quick Input Modal Component */}
+      {/* 4. Quick Input Modal Component */}
       {activeModal && (
         <ItemQuickInputModal
           activeModal={activeModal}
