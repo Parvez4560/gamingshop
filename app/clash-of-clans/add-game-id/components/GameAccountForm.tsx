@@ -35,7 +35,7 @@ export default function GameAccountForm({
             placeholder="#2ABC123"
             value={playerTag}
             onChange={(e) => setPlayerTag(e.target.value)}
-            className="w-full border border-gray-300 p-2 rounded-lg text-sm focus:ring-2 focus:ring-[#81007f] focus:outline-none"
+            className="w-full border border-gray-300 p-2.5 rounded-lg text-sm font-medium text-gray-900 placeholder:text-gray-400 bg-white focus:ring-2 focus:ring-[#81007f] focus:outline-none"
           />
         </div>
 
@@ -48,7 +48,7 @@ export default function GameAccountForm({
             placeholder="Account Name"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="w-full border border-gray-300 p-2 rounded-lg text-sm focus:ring-2 focus:ring-[#81007f] focus:outline-none"
+            className="w-full border border-gray-300 p-2.5 rounded-lg text-sm font-medium text-gray-900 placeholder:text-gray-400 bg-white focus:ring-2 focus:ring-[#81007f] focus:outline-none"
           />
         </div>
 
@@ -59,7 +59,7 @@ export default function GameAccountForm({
           <select
             value={selectedTownHall}
             onChange={handleTownHallChange}
-            className="w-full border border-gray-300 p-2 rounded-lg text-sm font-semibold text-[#81007f] focus:ring-2 focus:ring-[#81007f] focus:outline-none cursor-pointer"
+            className="w-full border border-gray-300 p-2.5 rounded-lg text-sm font-semibold text-[#81007f] bg-white focus:ring-2 focus:ring-[#81007f] focus:outline-none cursor-pointer"
           >
             <option value="">-- Select Town Hall --</option>
             {Array.from({ length: 18 }, (_, i) => i + 1).map((th) => (
