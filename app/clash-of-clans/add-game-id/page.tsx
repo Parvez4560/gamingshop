@@ -6,15 +6,30 @@ import GameAccountForm from './components/GameAccountForm';
 import ItemQuantityControl from './components/ItemQuantityControl';
 import ItemQuickInputModal, { ActiveModal } from './components/ItemQuickInputModal';
 
+interface ModuleLimit {
+  id: string;
+  maxLevel: number;
+}
+
+interface MergeTarget {
+  optionName: string;
+  targetItemId: string;
+  count: number;
+}
+
 interface LimitData {
   minCount?: number;
   maxCount?: number;
   maxLevel?: number | null;
+  canMerge?: boolean;
+  mergeTarget?: MergeTarget[] | null;
+  modules?: ModuleLimit[] | null;
 }
 
 interface ItemData {
   itemId: string;
   name: string;
+  craftedModulesMetadata?: Record<string, { name: string }> | null;
   limits: LimitData;
 }
 
@@ -23,7 +38,9 @@ interface UserSelection {
   level: number;
   minCount: number;
   maxCount: number;
+  baseMaxCount: number;
   maxLevel: number | null;
+  modulesLevel?: Record<string, number>;
 }
 
 export default function AddGameIdPage() {
@@ -51,6 +68,47 @@ export default function AddGameIdPage() {
     }
     fetchMasterMapping();
   }, []);
+
+  const calculateDynamicSelections = (
+    currentSelections: Record<string, UserSelection>,
+    items: ItemData[]
+  ) => {
+    const updated = { ...currentSelections };
+
+    items.forEach(item => {
+      if (updated[item.itemId]) {
+        updated[item.itemId].maxCount = updated[item.itemId].baseMaxCount;
+      }
+    });
+
+    items.forEach(item => {
+      const limits = item.limits || {};
+      if (limits.canMerge && Array.isArray(limits.mergeTarget) && limits.mergeTarget.length > 0) {
+        let totalDeduction = 0;
+
+        limits.mergeTarget.forEach(target => {
+          const targetSelection = updated[target.targetItemId];
+          if (targetSelection) {
+            const extraCount = Math.max(0, targetSelection.count - targetSelection.minCount);
+            totalDeduction += (extraCount * target.count);
+          }
+        });
+
+        if (updated[item.itemId]) {
+          const originalMax = updated[item.itemId].baseMaxCount;
+          const minAllowed = updated[item.itemId].minCount;
+          const newMax = Math.max(minAllowed, originalMax - totalDeduction);
+          updated[item.itemId].maxCount = newMax;
+
+          if (updated[item.itemId].count > newMax) {
+            updated[item.itemId].count = newMax;
+          }
+        }
+      }
+    });
+
+    return updated;
+  };
 
   const handleTownHallChange = async (e: ChangeEvent<HTMLSelectElement>) => {
     const thValue = e.target.value;
@@ -82,15 +140,26 @@ export default function AddGameIdPage() {
           const maxC = typeof limits.maxCount === 'number' ? limits.maxCount : 1;
           const maxL = limits.maxLevel ? Number(limits.maxLevel) : null;
 
+          const initialModules: Record<string, number> = {};
+          if (limits.modules && Array.isArray(limits.modules)) {
+            limits.modules.forEach(m => {
+              initialModules[m.id] = 3;
+            });
+          }
+
           initialSelections[item.itemId] = {
             count: minC,
             level: 1,
             minCount: minC,
             maxCount: maxC,
-            maxLevel: maxL
+            baseMaxCount: maxC,
+            maxLevel: maxL,
+            modulesLevel: initialModules
           };
         });
-        setUserSelections(initialSelections);
+
+        const syncedSelections = calculateDynamicSelections(initialSelections, result.items);
+        setUserSelections(syncedSelections);
       }
     } catch (err: any) {
       setErrorMessage(err.message);
@@ -110,9 +179,34 @@ export default function AddGameIdPage() {
 
       if (newVal < minVal || newVal > maxVal) return prev;
 
-      return {
+      const tempSelections = {
         ...prev,
         [itemId]: { ...current, [field]: newVal }
+      };
+
+      return calculateDynamicSelections(tempSelections, townHallItems);
+    });
+  };
+
+  const handleModuleLevelChange = (itemId: string, moduleId: string, delta: number, maxLevel: number) => {
+    setUserSelections(prev => {
+      const current = prev[itemId];
+      if (!current || !current.modulesLevel) return prev;
+
+      const currentModuleLvl = current.modulesLevel[moduleId] ?? 3;
+      const newLvl = currentModuleLvl + delta;
+
+      if (newLvl < 3 || newLvl > maxLevel) return prev;
+
+      return {
+        ...prev,
+        [itemId]: {
+          ...current,
+          modulesLevel: {
+            ...current.modulesLevel,
+            [moduleId]: newLvl
+          }
+        }
       };
     });
   };
@@ -142,13 +236,15 @@ export default function AddGameIdPage() {
       const current = prev[activeModal.itemId];
       if (!current) return prev;
 
-      return {
+      const tempSelections = {
         ...prev,
         [activeModal.itemId]: {
           ...current,
           [activeModal.type]: val
         }
       };
+
+      return calculateDynamicSelections(tempSelections, townHallItems);
     });
 
     setActiveModal(null);
@@ -159,7 +255,6 @@ export default function AddGameIdPage() {
       <Navbar />
 
       <main className="max-w-4xl mx-auto p-4 sm:p-6 mt-4">
-        {/* 1. Game Account Input Form */}
         <GameAccountForm
           playerTag={playerTag}
           setPlayerTag={setPlayerTag}
@@ -175,7 +270,6 @@ export default function AddGameIdPage() {
           </div>
         )}
 
-        {/* 2. Loading State */}
         {loading && (
           <div className="text-center py-10">
             <div className="inline-block w-8 h-8 border-4 border-[#81007f] border-t-transparent rounded-full animate-spin"></div>
@@ -183,7 +277,6 @@ export default function AddGameIdPage() {
           </div>
         )}
 
-        {/* 3. Items List (Conditional: Only shows when Town Hall is selected and loading is finished) */}
         {!loading && selectedTownHall && (
           <div className="animate-in fade-in duration-200">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">
@@ -195,18 +288,16 @@ export default function AddGameIdPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {townHallItems.map((item) => {
-                  const limits = item.limits || {};
-                  const minCount = typeof limits.minCount === 'number' ? limits.minCount : 1;
-                  const maxCount = typeof limits.maxCount === 'number' ? limits.maxCount : 1;
-                  const maxLevel = limits.maxLevel || null;
-
                   const selection = userSelections[item.itemId] || {
-                    count: minCount,
+                    count: item.limits.minCount ?? 1,
                     level: 1,
-                    minCount,
-                    maxCount,
-                    maxLevel
+                    minCount: item.limits.minCount ?? 1,
+                    maxCount: item.limits.maxCount ?? 1,
+                    baseMaxCount: item.limits.maxCount ?? 1,
+                    maxLevel: item.limits.maxLevel || null
                   };
+
+                  const hasModules = item.limits.modules && Array.isArray(item.limits.modules) && item.limits.modules.length > 0;
 
                   return (
                     <div key={item.itemId} className="border border-gray-200 p-4 rounded-xl bg-white shadow-sm flex flex-col justify-between">
@@ -217,48 +308,83 @@ export default function AddGameIdPage() {
                             ID: {item.itemId}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          Limit: {selection.minCount}-{selection.maxCount} | Max Level: {selection.maxLevel || 'N/A'}
+                        <div className="text-xs text-gray-500 mt-1 flex items-center justify-between">
+                          <span>Limit: {selection.minCount}-{selection.maxCount}</span>
+                          {item.limits.canMerge && (
+                            <span className="text-[10px] bg-purple-100 text-[#81007f] px-1.5 py-0.5 rounded font-bold">
+                              Mergeable 🛡️
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-sm flex-wrap gap-2">
-                        {/* Count Control */}
-                        <ItemQuantityControl
-                          label="Count"
-                          value={selection.count}
-                          min={selection.minCount}
-                          max={selection.maxCount}
-                          onIncrease={() => handleValueChange(item.itemId, 'count', 1)}
-                          onDecrease={() => handleValueChange(item.itemId, 'count', -1)}
-                          onOpenModal={() => openInputModal(
-                            item.itemId, 
-                            'count', 
-                            `${item.name} - Count`, 
-                            selection.count, 
-                            selection.minCount, 
-                            selection.maxCount
-                          )}
-                        />
-
-                        {/* Level Control */}
-                        {selection.maxLevel && (
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-3">
+                        <div className="flex items-center justify-between text-sm">
                           <ItemQuantityControl
-                            label="Level"
-                            value={selection.level}
-                            min={1}
-                            max={selection.maxLevel}
-                            onIncrease={() => handleValueChange(item.itemId, 'level', 1)}
-                            onDecrease={() => handleValueChange(item.itemId, 'level', -1)}
+                            label="Count"
+                            value={selection.count}
+                            min={selection.minCount}
+                            max={selection.maxCount}
+                            onIncrease={() => handleValueChange(item.itemId, 'count', 1)}
+                            onDecrease={() => handleValueChange(item.itemId, 'count', -1)}
                             onOpenModal={() => openInputModal(
                               item.itemId, 
-                              'level', 
-                              `${item.name} - Level`, 
-                              selection.level, 
-                              1, 
-                              selection.maxLevel || 1
+                              'count', 
+                              `${item.name} - Count`, 
+                              selection.count, 
+                              selection.minCount, 
+                              selection.maxCount
                             )}
                           />
+
+                          {!hasModules && selection.maxLevel && (
+                            <ItemQuantityControl
+                              label="Level"
+                              value={selection.level}
+                              min={1}
+                              max={selection.maxLevel}
+                              onIncrease={() => handleValueChange(item.itemId, 'level', 1)}
+                              onDecrease={() => handleValueChange(item.itemId, 'level', -1)}
+                              onOpenModal={() => openInputModal(
+                                item.itemId, 
+                                'level', 
+                                `${item.name} - Level`, 
+                                selection.level, 
+                                1, 
+                                selection.maxLevel || 1
+                              )}
+                            />
+                          )}
+                        </div>
+
+                        {hasModules && (
+                          <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-100 space-y-2 mt-1">
+                            <span className="text-xs font-bold text-gray-600 block border-b pb-1">
+                              Crafted Modules (Min Lvl: 3)
+                            </span>
+                            {item.limits.modules?.map((mod) => {
+                              const moduleMeta = item.craftedModulesMetadata?.[mod.id];
+                              const moduleName = moduleMeta?.name || `Module ${mod.id}`;
+                              const currentModLvl = selection.modulesLevel?.[mod.id] ?? 3;
+
+                              return (
+                                <div key={mod.id} className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-700 font-medium truncate max-w-[120px]">
+                                    {moduleName}
+                                  </span>
+                                  <ItemQuantityControl
+                                    label="Lvl"
+                                    value={currentModLvl}
+                                    min={3}
+                                    max={mod.maxLevel}
+                                    onIncrease={() => handleModuleLevelChange(item.itemId, mod.id, 1, mod.maxLevel)}
+                                    onDecrease={() => handleModuleLevelChange(item.itemId, mod.id, -1, mod.maxLevel)}
+                                    onOpenModal={() => {}}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -270,7 +396,6 @@ export default function AddGameIdPage() {
         )}
       </main>
 
-      {/* 4. Quick Input Modal Component */}
       {activeModal && (
         <ItemQuickInputModal
           activeModal={activeModal}
