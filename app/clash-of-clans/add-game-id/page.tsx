@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, ChangeEvent } from 'react';
+import Navbar from './components/Navbar';
+import GameAccountForm from './components/GameAccountForm';
+import ItemQuantityControl from './components/ItemQuantityControl';
+import ItemQuickInputModal, { ActiveModal } from './components/ItemQuickInputModal';
 
 interface LimitData {
   minCount?: number;
@@ -32,17 +36,15 @@ export default function AddGameIdPage() {
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const [userSelections, setUserSelections] = useState<Record<string, UserSelection>>({});
+  const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
+  const [inputValue, setInputValue] = useState<string>('');
 
-  // ১. মাস্টার ম্যাপিং ফেচ
   useEffect(() => {
     async function fetchMasterMapping() {
       try {
         const res = await fetch('/backend-api/coc-guard/mapping?category=home-village');
         const result = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(result.message || 'মাস্টার ম্যাপিং লোড করতে ব্যর্থ হয়েছে');
-        }
+        if (!res.ok) throw new Error(result.message || 'Failed to load master mapping');
       } catch (err: any) {
         console.error("Master mapping fetch error:", err.message);
       }
@@ -50,7 +52,6 @@ export default function AddGameIdPage() {
     fetchMasterMapping();
   }, []);
 
-  // ২. টাউন হল পরিবর্তনের মাধ্যমে আইটেম ফেচ
   const handleTownHallChange = async (e: ChangeEvent<HTMLSelectElement>) => {
     const thValue = e.target.value;
     setSelectedTownHall(thValue);
@@ -69,10 +70,7 @@ export default function AddGameIdPage() {
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'টাউন হলের ডাটা আনতে সমস্যা হয়েছে');
-      }
+      if (!response.ok) throw new Error(result.message || 'Failed to fetch town hall data');
       
       if (result.success && Array.isArray(result.items)) {
         setTownHallItems(result.items);
@@ -101,170 +99,185 @@ export default function AddGameIdPage() {
     }
   };
 
-  const handleCountChange = (itemId: string, delta: number) => {
+  const handleValueChange = (itemId: string, field: 'count' | 'level', delta: number) => {
     setUserSelections(prev => {
       const current = prev[itemId];
       if (!current) return prev;
 
-      const newCount = current.count + delta;
-      if (newCount < current.minCount || newCount > current.maxCount) {
-        return prev;
-      }
+      const newVal = current[field] + delta;
+      const minVal = field === 'count' ? current.minCount : 1;
+      const maxVal = field === 'count' ? current.maxCount : (current.maxLevel || 1);
+
+      if (newVal < minVal || newVal > maxVal) return prev;
 
       return {
         ...prev,
-        [itemId]: { ...current, count: newCount }
+        [itemId]: { ...current, [field]: newVal }
       };
     });
   };
 
-  const handleLevelChange = (itemId: string, levelInput: string) => {
-    const newLevel = parseInt(levelInput) || 1;
-    setUserSelections(prev => {
-      const current = prev[itemId];
-      if (!current) return prev;
+  const openInputModal = (
+    itemId: string, 
+    type: 'count' | 'level', 
+    title: string, 
+    currentVal: number, 
+    min: number, 
+    max: number
+  ) => {
+    setActiveModal({ itemId, type, title, currentValue: currentVal, min, max });
+    setInputValue(currentVal.toString());
+  };
 
-      if (newLevel < 1 || (current.maxLevel && newLevel > current.maxLevel)) {
-        return prev;
-      }
+  const handleModalSave = () => {
+    if (!activeModal) return;
+
+    let val = parseInt(inputValue, 10);
+    if (isNaN(val)) val = activeModal.min;
+
+    if (val < activeModal.min) val = activeModal.min;
+    if (val > activeModal.max) val = activeModal.max;
+
+    setUserSelections(prev => {
+      const current = prev[activeModal.itemId];
+      if (!current) return prev;
 
       return {
         ...prev,
-        [itemId]: { ...current, level: newLevel }
+        [activeModal.itemId]: {
+          ...current,
+          [activeModal.type]: val
+        }
       };
     });
+
+    setActiveModal(null);
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">গেম অ্যাকাউন্ট ও সার্ভার গার্ড সেটআপ</h2>
+    <div className="min-h-screen bg-gray-50 pb-10 relative">
+      <Navbar />
 
-      {errorMessage && (
-        <div className="mb-4 bg-red-100 text-red-600 p-3 rounded-lg text-sm font-semibold">
-          {errorMessage}
-        </div>
-      )}
+      <main className="max-w-4xl mx-auto p-4 sm:p-6 mt-4">
+        {/* 1. Game Account Input Form */}
+        <GameAccountForm
+          playerTag={playerTag}
+          setPlayerTag={setPlayerTag}
+          playerName={playerName}
+          setPlayerName={setPlayerName}
+          selectedTownHall={selectedTownHall}
+          handleTownHallChange={handleTownHallChange}
+        />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Player Tag</label>
-          <input
-            type="text"
-            placeholder="#2ABC123"
-            value={playerTag}
-            onChange={(e) => setPlayerTag(e.target.value)}
-            className="w-full border p-2 rounded focus:ring-2 focus:ring-[#81007f]"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
-          <input
-            type="text"
-            placeholder="Account Name"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            className="w-full border p-2 rounded focus:ring-2 focus:ring-[#81007f]"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select Town Hall</label>
-          <select
-            value={selectedTownHall}
-            onChange={handleTownHallChange}
-            className="w-full border p-2 rounded focus:ring-2 focus:ring-[#81007f] font-semibold text-[#81007f]"
-          >
-            <option value="">-- টাউন হল সিলেক্ট করুন --</option>
-            {Array.from({ length: 18 }, (_, i) => i + 1).map((th) => (
-              <option key={th} value={th}>Town Hall {th}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <hr className="my-6" />
-
-      <div>
-        <h3 className="text-xl font-semibold mb-4 text-gray-700">
-          {selectedTownHall ? `Town Hall ${selectedTownHall} এর জন্য এভেইলেবল আইটেম ও লিমিট` : "দয়া করে প্রথমে টাউন হল সিলেক্ট করুন"}
-        </h3>
-
-        {loading && <p className="text-[#81007f] font-medium animate-pulse">সার্ভার থেকে ডাটা লোড হচ্ছে...</p>}
-
-        {!loading && townHallItems.length === 0 && selectedTownHall && (
-          <p className="text-gray-500">এই টাউন হলের জন্য কোনো আইটেম পাওয়া যায়নি।</p>
+        {errorMessage && (
+          <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm font-semibold border border-red-200">
+            {errorMessage}
+          </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {townHallItems.map((item) => {
-            const limits = item.limits || {};
-            const minCount = typeof limits.minCount === 'number' ? limits.minCount : 1;
-            const maxCount = typeof limits.maxCount === 'number' ? limits.maxCount : 1;
-            const maxLevel = limits.maxLevel || null;
+        {/* 2. Items List */}
+        {loading && (
+          <p className="text-center text-[#81007f] font-medium py-6 animate-pulse">
+            Loading data...
+          </p>
+        )}
 
-            const selection = userSelections[item.itemId] || {
-              count: minCount,
-              level: 1,
-              minCount,
-              maxCount,
-              maxLevel
-            };
+        {!loading && selectedTownHall && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">
+              Town Hall {selectedTownHall} - Available Items
+            </h3>
 
-            return (
-              <div key={item.itemId} className="border p-4 rounded-lg bg-gray-50 shadow-sm flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-bold text-lg text-gray-800">{item.name}</h4>
-                    <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">ID: {item.itemId}</span>
-                  </div>
-                  
-                  <div className="text-xs text-gray-500 mt-1">
-                    কাউন্ট সীমা: {selection.minCount} থেকে {selection.maxCount} | সর্বোচ্চ লেভেল: {selection.maxLevel || 'N/A'}
-                  </div>
-                </div>
+            {townHallItems.length === 0 ? (
+              <p className="text-gray-500 text-center py-6">No items found for this Town Hall.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {townHallItems.map((item) => {
+                  const limits = item.limits || {};
+                  const minCount = typeof limits.minCount === 'number' ? limits.minCount : 1;
+                  const maxCount = typeof limits.maxCount === 'number' ? limits.maxCount : 1;
+                  const maxLevel = limits.maxLevel || null;
 
-                <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-600">সংখ্যা:</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCountChange(item.itemId, -1)}
-                      disabled={selection.count <= selection.minCount}
-                      className="px-2.5 py-1 bg-red-500 text-white rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      -
-                    </button>
-                    <span className="font-bold px-2">{selection.count}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCountChange(item.itemId, 1)}
-                      disabled={selection.count >= selection.maxCount}
-                      className="px-2.5 py-1 bg-green-500 text-white rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      +
-                    </button>
-                  </div>
+                  const selection = userSelections[item.itemId] || {
+                    count: minCount,
+                    level: 1,
+                    minCount,
+                    maxCount,
+                    maxLevel
+                  };
 
-                  {selection.maxLevel && (
-                    <div className="flex items-center space-x-1">
-                      <span className="text-sm font-medium text-gray-600">লেভেল:</span>
-                      <input
-                        type="number"
-                        min="1"
-                        max={selection.maxLevel}
-                        value={selection.level}
-                        onChange={(e) => handleLevelChange(item.itemId, e.target.value)}
-                        className="w-16 border text-center p-1 rounded font-semibold bg-white"
-                      />
+                  return (
+                    <div key={item.itemId} className="border border-gray-200 p-4 rounded-xl bg-white shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-bold text-gray-800">{item.name}</h4>
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                            ID: {item.itemId}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Limit: {selection.minCount}-{selection.maxCount} | Max Level: {selection.maxLevel || 'N/A'}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-sm flex-wrap gap-2">
+                        {/* Count Control */}
+                        <ItemQuantityControl
+                          label="Count"
+                          value={selection.count}
+                          min={selection.minCount}
+                          max={selection.maxCount}
+                          onIncrease={() => handleValueChange(item.itemId, 'count', 1)}
+                          onDecrease={() => handleValueChange(item.itemId, 'count', -1)}
+                          onOpenModal={() => openInputModal(
+                            item.itemId, 
+                            'count', 
+                            `${item.name} - Count`, 
+                            selection.count, 
+                            selection.minCount, 
+                            selection.maxCount
+                          )}
+                        />
+
+                        {/* Level Control */}
+                        {selection.maxLevel && (
+                          <ItemQuantityControl
+                            label="Level"
+                            value={selection.level}
+                            min={1}
+                            max={selection.maxLevel}
+                            onIncrease={() => handleValueChange(item.itemId, 'level', 1)}
+                            onDecrease={() => handleValueChange(item.itemId, 'level', -1)}
+                            onOpenModal={() => openInputModal(
+                              item.itemId, 
+                              'level', 
+                              `${item.name} - Level`, 
+                              selection.level, 
+                              1, 
+                              selection.maxLevel || 1
+                            )}
+                          />
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-      </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* 3. Quick Input Modal Component */}
+      {activeModal && (
+        <ItemQuickInputModal
+          activeModal={activeModal}
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          onClose={() => setActiveModal(null)}
+          onSave={handleModalSave}
+        />
+      )}
     </div>
   );
 }
