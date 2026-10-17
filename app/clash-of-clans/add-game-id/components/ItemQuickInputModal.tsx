@@ -26,7 +26,6 @@ export default function ItemQuickInputModal({
   onClose,
   onSave
 }: ItemQuickInputModalProps) {
-  // Parse current input to check validation in real-time
   const parsedVal = parseInt(inputValue, 10);
   const isInvalid = isNaN(parsedVal) || parsedVal < activeModal.min || parsedVal > activeModal.max;
 
@@ -38,7 +37,7 @@ export default function ItemQuickInputModal({
           Allowed range: <span className="font-semibold text-gray-700">{activeModal.min}</span> to <span className="font-semibold text-gray-700">{activeModal.max}</span>
         </p>
 
-        {/* Input Box with dynamic error border */}
+        {/* Input Box */}
         <input
           type="number"
           min={activeModal.min}
@@ -57,11 +56,18 @@ export default function ItemQuickInputModal({
           }`}
         />
 
-        {/* Error message text */}
+        {/* Error message with SVG Icon */}
         {isInvalid && (
-          <p className="text-[11px] text-red-500 font-medium mt-1.5 text-center">
-            ⚠️ Value must be between {activeModal.min} and {activeModal.max}
-          </p>
+          <div className="flex items-center justify-center gap-1.5 mt-2 text-red-500">
+            <img
+              src="/icons/ui/actions/warning-rad.svg"
+              alt="Warning"
+              className="w-3.5 h-3.5 object-contain shrink-0"
+            />
+            <p className="text-[11px] font-medium">
+              Value must be between {activeModal.min} and {activeModal.max}
+            </p>
+          </div>
         )}
 
         <div className="flex items-center justify-end gap-2 mt-4">
@@ -73,7 +79,6 @@ export default function ItemQuickInputModal({
             Cancel
           </button>
           
-          {/* Set Value button disabled if input is invalid */}
           <button
             type="button"
             onClick={onSave}
