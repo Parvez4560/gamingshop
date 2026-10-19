@@ -5,16 +5,11 @@ import Navbar from './components/Navbar';
 import GameAccountForm from './components/GameAccountForm';
 import ItemQuantityControl from './components/ItemQuantityControl';
 import ItemQuickInputModal, { ActiveModal } from './components/ItemQuickInputModal';
+import JsonDataModal from './components/JsonDataModal';
 
 interface ModuleLimit {
   id: string;
   maxLevel: number;
-}
-
-interface MergeTarget {
-  optionName: string;
-  targetItemId: string;
-  count: number;
 }
 
 interface LimitData {
@@ -23,25 +18,27 @@ interface LimitData {
   maxLevel?: number | null;
   prevMaxLevel?: number | null;
   canMerge?: boolean;
-  mergeTarget?: MergeTarget[] | null;
+  mergeTarget?: any[];
   modules?: ModuleLimit[] | null;
-  prevModules?: ModuleLimit[] | null;
-}
-
-interface UnlockRequirement {
-  buildingId: string;
-  minBuildingLevel: number;
 }
 
 interface ItemData {
   itemId: string;
   name: string;
   subType?: string;
+  mainType?: string;
+  category?: string;
   craftedModulesMetadata?: Record<string, { name: string }> | null;
-  unlockRequirement?: UnlockRequirement | null;
+  unlockRequirement?: { buildingId: string; minBuildingLevel: number } | null;
   minTownHallForUpgrade?: number | null;
   limitsByBuildingLevel?: Record<string, { maxLevel: number }> | null;
   limits?: LimitData | null;
+}
+
+interface SubRow {
+  id: string;
+  count: number;
+  level: number;
 }
 
 interface UserSelection {
@@ -53,6 +50,7 @@ interface UserSelection {
   maxLevel: number | null;
   modulesLevel?: Record<string, number>;
   isLocked?: boolean;
+  subRows?: SubRow[];
 }
 
 export default function AddGameIdPage() {
@@ -67,8 +65,8 @@ export default function AddGameIdPage() {
   const [userSelections, setUserSelections] = useState<Record<string, UserSelection>>({});
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [inputValue, setInputValue] = useState<string>('');
+  const [isJsonModalOpen, setIsJsonModalOpen] = useState<boolean>(false);
 
-  // 🔍 সার্চ ও সাব-টাইপ ফিল্টার স্টেট
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedSubTypes, setSelectedSubTypes] = useState<string[]>([]);
 
@@ -77,15 +75,14 @@ export default function AddGameIdPage() {
       try {
         const res = await fetch('/backend-api/coc-guard/mapping?category=home-village');
         const result = await res.json();
-        if (!res.ok) throw new Error(result.message || 'Failed to load master mapping');
+        if (!res.ok) throw new Error(result.message || 'Fetch error');
       } catch (err: any) {
-        console.error("Master mapping fetch error:", err.message);
+        console.error("Master mapping error:", err.message);
       }
     }
     fetchMasterMapping();
   }, []);
 
-  // 🛡️ ডায়নামিক লজিক ক্যালকুলেটর (পরিশোধিত ও নির্ভুল নিয়ম)
   const calculateDynamicSelections = (
     currentSelections: Record<string, UserSelection>,
     items: ItemData[],
@@ -94,51 +91,15 @@ export default function AddGameIdPage() {
     const updated = { ...currentSelections };
     const thNumber = parseInt(currentTownHall || '1', 10);
 
-    // ১. মার্জিং লিমিট রিসেট ও রি-ক্যালকুলেট
-    items.forEach(item => {
-      if (updated[item.itemId]) {
-        updated[item.itemId].maxCount = updated[item.itemId].baseMaxCount;
-      }
-    });
-
-    items.forEach(item => {
-      const limits = item.limits || {};
-      if (limits.canMerge && Array.isArray(limits.mergeTarget) && limits.mergeTarget.length > 0) {
-        let totalDeduction = 0;
-
-        limits.mergeTarget.forEach(target => {
-          const targetSelection = updated[target.targetItemId];
-          if (targetSelection) {
-            const extraCount = Math.max(0, targetSelection.count - targetSelection.minCount);
-            totalDeduction += (extraCount * target.count);
-          }
-        });
-
-        if (updated[item.itemId]) {
-          const originalMax = updated[item.itemId].baseMaxCount;
-          const minAllowed = updated[item.itemId].minCount;
-          const newMax = Math.max(minAllowed, originalMax - totalDeduction);
-          updated[item.itemId].maxCount = newMax;
-
-          if (updated[item.itemId].count > newMax) {
-            updated[item.itemId].count = newMax;
-          }
-        }
-      }
-    });
-
-    // ২. 🧩 আনলক রিকোয়ারমেন্ট, বিল্ডিং লেভেল ও আপগ্রেড লিমিট সিঙ্ক
     items.forEach(item => {
       if (!updated[item.itemId]) return;
 
       if (item.limitsByBuildingLevel) {
         let currentBuildingLevel = 1;
 
-        // 🎯 ক) দৃশ্যমানতা চেক (unlockRequirement অনুযায়ী)
         if (item.unlockRequirement) {
           const parentBuilding = updated[item.unlockRequirement.buildingId];
 
-          // প্যারেন্ট বিল্ডিং না থাকলে বা আনলকড না হলে আইটেমটি লকড (হিডেন)
           if (!parentBuilding || parentBuilding.isLocked) {
             updated[item.itemId].isLocked = true;
             updated[item.itemId].level = 0;
@@ -153,22 +114,18 @@ export default function AddGameIdPage() {
           }
         }
 
-        // 🎯 খ) minTownHallForUpgrade চেক (শুধুমাত্র আপগ্রেড কন্ট্রোলের জন্য)
         if (item.minTownHallForUpgrade && thNumber < item.minTownHallForUpgrade) {
-          // আইটেম আনলকড থাকলে লেভেল ১ এ ফিক্সড থাকবে (আপগ্রেড বন্ধ)
           updated[item.itemId].isLocked = false;
           updated[item.itemId].level = 1;
           updated[item.itemId].maxLevel = 1;
           return;
         }
 
-        // নরমাল বিল্ডিং/টাউনহল লেভেল অনুযায়ী ডায়নামিক maxLevel সেট করা
         const levelConfig = item.limitsByBuildingLevel[String(currentBuildingLevel)] || item.limitsByBuildingLevel[String(thNumber)];
 
         if (levelConfig) {
           updated[item.itemId].isLocked = false;
           updated[item.itemId].maxLevel = levelConfig.maxLevel;
-
           if (updated[item.itemId].level > levelConfig.maxLevel || updated[item.itemId].level === 0) {
             updated[item.itemId].level = levelConfig.maxLevel;
           }
@@ -202,7 +159,7 @@ export default function AddGameIdPage() {
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message || 'Failed to fetch town hall data');
+      if (!response.ok) throw new Error(result.message || 'Fetch error');
       
       if (result.success && Array.isArray(result.items)) {
         setTownHallItems(result.items);
@@ -216,14 +173,6 @@ export default function AddGameIdPage() {
 
           const defaultLevel = limits.prevMaxLevel ?? maxL ?? 1;
 
-          const initialModules: Record<string, number> = {};
-          if (limits.modules && Array.isArray(limits.modules)) {
-            limits.modules.forEach(m => {
-              const prevMod = limits.prevModules?.find(pm => pm.id === m.id);
-              initialModules[m.id] = prevMod?.maxLevel ?? m.maxLevel ?? 3;
-            });
-          }
-
           initialSelections[item.itemId] = {
             count: minC,
             level: defaultLevel,
@@ -231,8 +180,8 @@ export default function AddGameIdPage() {
             maxCount: maxC,
             baseMaxCount: maxC,
             maxLevel: maxL,
-            modulesLevel: initialModules,
-            isLocked: false
+            isLocked: false,
+            subRows: []
           };
         });
 
@@ -246,58 +195,122 @@ export default function AddGameIdPage() {
     }
   };
 
-  const handleValueChange = (itemId: string, field: 'count' | 'level', delta: number) => {
+  const getTotalItemCount = (selection: UserSelection) => {
+    const subTotal = (selection.subRows || []).reduce((sum, r) => sum + r.count, 0);
+    return selection.count + subTotal;
+  };
+
+  // 🎯 ১. মূল রো-এর প্লাস/মাইনাস চেঞ্জ
+  const handleMainValueChange = (itemId: string, field: 'count' | 'level', delta: number) => {
     setUserSelections(prev => {
       const current = prev[itemId];
       if (!current || current.isLocked) return prev;
 
-      const newVal = current[field] + delta;
-      const minVal = field === 'count' ? current.minCount : 1;
-      const maxVal = field === 'count' ? current.maxCount : (current.maxLevel || 1);
+      if (field === 'count') {
+        const total = getTotalItemCount(current);
+        const newMainCount = current.count + delta;
 
-      if (newVal < minVal || newVal > maxVal) return prev;
+        if (newMainCount < 1) return prev;
+        if (delta > 0 && total >= current.maxCount) return prev;
 
-      const tempSelections = {
-        ...prev,
-        [itemId]: { ...current, [field]: newVal }
-      };
+        const tempSelections = {
+          ...prev,
+          [itemId]: { ...current, count: newMainCount }
+        };
+        return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
+      } else {
+        const newVal = current.level + delta;
+        const maxVal = current.maxLevel || 1;
+        if (newVal < 1 || newVal > maxVal) return prev;
 
-      return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
+        const tempSelections = {
+          ...prev,
+          [itemId]: { ...current, level: newVal }
+        };
+        return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
+      }
     });
   };
 
-  const handleModuleLevelChange = (itemId: string, moduleId: string, delta: number, maxLevel: number) => {
+  // 🎯 ২. ওয়াল/বিল্ডিং এর জন্য বাল্ক স্প্লিট রো তৈরি
+  const addSubRow = (itemId: string) => {
     setUserSelections(prev => {
       const current = prev[itemId];
-      if (!current || !current.modulesLevel) return prev;
+      if (!current || current.count <= 1) return prev;
 
-      const currentModuleLvl = current.modulesLevel[moduleId] ?? 3;
-      const newLvl = currentModuleLvl + delta;
+      const isWall = current.maxCount > 50; 
+      const defaultSplitCount = isWall ? Math.floor(current.count / 2) : 1; // ওয়ালের জন্য অর্ধেক বা কাস্টম স্প্লিট
 
-      if (newLvl < 3 || newLvl > maxLevel) return prev;
+      const subRows = current.subRows || [];
+      const newSubRow: SubRow = {
+        id: Date.now().toString(),
+        count: defaultSplitCount,
+        level: Math.max(1, (current.level || 1) - 1)
+      };
 
       return {
         ...prev,
         [itemId]: {
           ...current,
-          modulesLevel: {
-            ...current.modulesLevel,
-            [moduleId]: newLvl
-          }
+          count: current.count - defaultSplitCount, // মূল রো থেকে কেটে সাব-রো তে ট্রান্সফার
+          subRows: [...subRows, newSubRow]
         }
       };
     });
   };
 
+  // 🎯 ৩. সাব-রো ভ্যালু পরিবর্তন ও ০ বানালে অটো মার্জ ব্যাক
+  const handleSubRowValueChange = (itemId: string, rowId: string, field: 'count' | 'level', delta: number) => {
+    setUserSelections(prev => {
+      const current = prev[itemId];
+      if (!current || !current.subRows) return prev;
+
+      let returnedToMain = 0;
+
+      const updatedSubRows = current.subRows.map(row => {
+        if (row.id !== rowId) return row;
+
+        if (field === 'count') {
+          const newCnt = row.count + delta;
+
+          if (newCnt <= 0) {
+            returnedToMain = row.count; 
+            return null;
+          }
+
+          const currentTotal = getTotalItemCount(current);
+          if (delta > 0 && currentTotal >= current.maxCount) return row;
+
+          return { ...row, count: newCnt };
+        } else {
+          const maxLvl = current.maxLevel || 1;
+          const newLvl = Math.min(maxLvl, Math.max(1, row.level + delta));
+          return { ...row, level: newLvl };
+        }
+      }).filter(Boolean) as SubRow[];
+
+      return {
+        ...prev,
+        [itemId]: {
+          ...current,
+          count: current.count + returnedToMain,
+          subRows: updatedSubRows
+        }
+      };
+    });
+  };
+
+  // 🎯 ৪. ইনপুট মডাল সরাসরি ম্যানুয়াল সংখ্যা ইনপুট দেওয়ার জন্য (যেমন ওয়ালের ৩০০/২০০ বসানো)
   const openInputModal = (
     itemId: string, 
     type: 'count' | 'level', 
     title: string, 
     currentVal: number, 
     min: number, 
-    max: number
+    max: number,
+    subRowId?: string
   ) => {
-    setActiveModal({ itemId, type, title, currentValue: currentVal, min, max });
+    setActiveModal({ itemId, type, title, currentValue: currentVal, min, max, subRowId } as any);
     setInputValue(currentVal.toString());
   };
 
@@ -314,21 +327,100 @@ export default function AddGameIdPage() {
       const current = prev[activeModal.itemId];
       if (!current) return prev;
 
-      const tempSelections = {
-        ...prev,
-        [activeModal.itemId]: {
-          ...current,
-          [activeModal.type]: val
-        }
-      };
+      const subRowId = (activeModal as any).subRowId;
 
-      return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
+      if (subRowId && current.subRows) {
+        // সাব-রো কাস্টম কাউন্ট এডিট
+        let diff = 0;
+        const updatedSubRows = current.subRows.map(r => {
+          if (r.id === subRowId) {
+            diff = val - r.count;
+            return { ...r, [activeModal.type]: val };
+          }
+          return r;
+        }).filter(r => r.count > 0);
+
+        return {
+          ...prev,
+          [activeModal.itemId]: {
+            ...current,
+            count: Math.max(1, current.count - diff), // মেইন রো-এর সাথে এডজাস্ট
+            subRows: updatedSubRows
+          }
+        };
+      } else {
+        // মেইন রো এডিট
+        const tempSelections = {
+          ...prev,
+          [activeModal.itemId]: {
+            ...current,
+            [activeModal.type]: val
+          }
+        };
+        return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
+      }
     });
 
     setActiveModal(null);
   };
 
-  // 🎯 আনলকড (দৃশ্যমান) আইটেমের তালিকা ফিল্টার
+  const handleImportJson = (importedData: any) => {
+    if (!importedData || typeof importedData !== 'object') return;
+
+    if (importedData.tag) setPlayerTag(importedData.tag);
+    if (importedData.townHall) setSelectedTownHall(String(importedData.townHall));
+
+    setUserSelections(prev => {
+      const updated = { ...prev };
+
+      const allItems = [
+        ...(importedData.buildings || []),
+        ...(importedData.heroes || []),
+        ...(importedData.units || []),
+        ...(importedData.spells || []),
+        ...(importedData.pets || []),
+        ...(importedData.equipment || []),
+        ...(importedData.traps || []),
+        ...(importedData.siege_machines || [])
+      ];
+
+      const groupedByData: Record<string, any[]> = {};
+      allItems.forEach(item => {
+        if (item.data) {
+          const idStr = String(item.data);
+          if (!groupedByData[idStr]) groupedByData[idStr] = [];
+          groupedByData[idStr].push(item);
+        }
+      });
+
+      Object.keys(updated).forEach(itemId => {
+        const itemRecords = groupedByData[itemId];
+        if (itemRecords && itemRecords.length > 0) {
+          const firstRecord = itemRecords[0];
+          const maxC = updated[itemId].maxCount;
+          const maxL = updated[itemId].maxLevel || 1;
+
+          updated[itemId].count = Math.min(maxC, Math.max(1, Number(firstRecord.cnt) || 1));
+          updated[itemId].level = Math.min(maxL, Math.max(1, Number(firstRecord.lvl) || 1));
+
+          if (itemRecords.length > 1) {
+            const extraSubRows: SubRow[] = [];
+            for (let i = 1; i < itemRecords.length; i++) {
+              extraSubRows.push({
+                id: `${Date.now()}_${i}`,
+                count: Math.min(maxC, Math.max(1, Number(itemRecords[i].cnt) || 1)),
+                level: Math.min(maxL, Math.max(1, Number(itemRecords[i].lvl) || 1))
+              });
+            }
+            updated[itemId].subRows = extraSubRows;
+          }
+        }
+      });
+
+      return calculateDynamicSelections(updated, townHallItems, selectedTownHall);
+    });
+  };
+
   const visibleUnlockedItems = useMemo(() => {
     return townHallItems.filter(item => {
       const selection = userSelections[item.itemId];
@@ -336,7 +428,6 @@ export default function AddGameIdPage() {
     });
   }, [townHallItems, userSelections]);
 
-  // 🏷️ সাব-টাইপ ফিল্টার তালিকা (Dynamic SubType Chips)
   const availableSubTypes = useMemo(() => {
     const subTypesSet = new Set<string>();
     visibleUnlockedItems.forEach(item => {
@@ -347,7 +438,6 @@ export default function AddGameIdPage() {
     return Array.from(subTypesSet);
   }, [visibleUnlockedItems]);
 
-  // 🔍 সার্চ ও ফিল্টার অনুযায়ী প্রদর্শিত আইটেম তালিকা
   const filteredDisplayItems = useMemo(() => {
     return visibleUnlockedItems.filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -369,7 +459,7 @@ export default function AddGameIdPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 relative">
+    <div className="min-h-screen bg-gray-50 pb-16 relative text-gray-900">
       <Navbar />
 
       <main className="max-w-4xl mx-auto p-4 sm:p-6 mt-4">
@@ -398,187 +488,192 @@ export default function AddGameIdPage() {
         {!loading && selectedTownHall && (
           <div className="animate-in fade-in duration-200">
 
-            {/* 📌 STICKY SEARCH & SUBTYPE FILTER BAR */}
+            {/* STICKY SEARCH BAR + JSON ACTION BUTTON */}
             <div className="sticky top-[64px] z-10 bg-gray-50/95 backdrop-blur-md pt-2 pb-3 mb-4 border-b border-gray-200 shadow-xs -mx-4 px-4 sm:-mx-6 sm:px-6">
               <div className="space-y-2.5">
-                {/* 🔍 Search Box */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search building, hero, troop name or ID..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-300 rounded-lg shadow-xs focus:outline-none focus:ring-2 focus:ring-[#81007f] focus:border-transparent"
-                  />
-                  <svg className="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-2.5 text-xs bg-gray-200 hover:bg-gray-300 rounded-full w-4 h-4 flex items-center justify-center text-gray-600"
-                    >
-                      ✕
-                    </button>
-                  )}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      placeholder="Search building, hero, troop name or ID..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{ WebkitTextFillColor: '#111827' }}
+                      className="w-full pl-9 pr-4 py-2 text-sm bg-white text-gray-900 border border-gray-300 rounded-lg shadow-xs focus:outline-none focus:ring-2 focus:ring-[#81007f]"
+                    />
+                    <svg className="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+
+                  <button
+                    onClick={() => setIsJsonModalOpen(true)}
+                    className="p-2 bg-white border border-gray-300 hover:border-[#81007f] hover:bg-purple-50 rounded-lg shadow-xs transition-colors flex items-center justify-center"
+                    title="Open JSON Code Modal"
+                  >
+                    <img src="/icons/ui/actions/json-data.svg" alt="JSON Data" className="w-5 h-5" />
+                  </button>
                 </div>
 
-                {/* 🏷️ Dynamic SubType Chips */}
                 {availableSubTypes.length > 0 && (
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
                     <button
                       onClick={() => setSelectedSubTypes([])}
                       className={`px-3 py-1 rounded-full font-medium whitespace-nowrap transition-colors ${
                         selectedSubTypes.length === 0
-                          ? 'bg-[#81007f] text-white shadow-xs'
-                          : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                          ? 'bg-[#81007f] text-white'
+                          : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
                       }`}
                     >
                       All ({visibleUnlockedItems.length})
                     </button>
-                    {availableSubTypes.map(subType => {
-                      const isSelected = selectedSubTypes.includes(subType);
-                      return (
-                        <button
-                          key={subType}
-                          onClick={() => toggleSubTypeFilter(subType)}
-                          className={`px-3 py-1 rounded-full font-medium capitalize whitespace-nowrap transition-colors ${
-                            isSelected
-                              ? 'bg-[#81007f] text-white shadow-xs'
-                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
-                          }`}
-                        >
-                          {subType}
-                        </button>
-                      );
-                    })}
+                    {availableSubTypes.map(subType => (
+                      <button
+                        key={subType}
+                        onClick={() => toggleSubTypeFilter(subType)}
+                        className={`px-3 py-1 rounded-full font-medium capitalize whitespace-nowrap transition-colors ${
+                          selectedSubTypes.includes(subType)
+                            ? 'bg-[#81007f] text-white'
+                            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {subType}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-md font-bold text-gray-700">
-                Town Hall {selectedTownHall} Items ({filteredDisplayItems.length})
-              </h3>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredDisplayItems.map((item) => {
+                const selection = userSelections[item.itemId];
+                const isSingleCountOnly = selection.minCount === 1 && selection.maxCount === 1;
+                const subRows = selection.subRows || [];
+                const currentTotal = getTotalItemCount(selection);
 
-            {filteredDisplayItems.length === 0 ? (
-              <p className="text-gray-500 text-center py-8 bg-white rounded-xl border border-dashed border-gray-300">
-                No items match your search or filter.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredDisplayItems.map((item) => {
-                  const selection = userSelections[item.itemId];
-                  const hasModules = item.limits?.modules && Array.isArray(item.limits.modules) && item.limits.modules.length > 0;
-
-                  const isSingleCountOnly = selection.minCount === 1 && selection.maxCount === 1;
-
-                  return (
-                    <div key={item.itemId} className="border border-gray-200 p-4 rounded-xl bg-white shadow-xs flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-center">
-                          <h4 className="font-bold text-gray-800">{item.name}</h4>
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                            ID: {item.itemId}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1 flex items-center justify-between">
-                          <span>
-                            {isSingleCountOnly ? 'Single Quantity' : `Limit: ${selection.minCount}-${selection.maxCount}`}
-                          </span>
-                          {item.limits?.canMerge && (
-                            <span className="text-[10px] bg-purple-100 text-[#81007f] px-1.5 py-0.5 rounded font-bold">
-                              Mergeable 🛡️
-                            </span>
-                          )}
-                        </div>
+                return (
+                  <div key={item.itemId} className="border border-gray-200 p-4 rounded-xl bg-white shadow-xs flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-gray-900">{item.name}</h4>
+                        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded font-mono">
+                          ID: {item.itemId}
+                        </span>
                       </div>
-
-                      <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-3">
-                        <div className={`flex items-center text-sm ${isSingleCountOnly ? 'justify-end' : 'justify-between'}`}>
-
-                          {!isSingleCountOnly && (
-                            <ItemQuantityControl
-                              label="Count"
-                              value={selection.count}
-                              min={selection.minCount}
-                              max={selection.maxCount}
-                              onIncrease={() => handleValueChange(item.itemId, 'count', 1)}
-                              onDecrease={() => handleValueChange(item.itemId, 'count', -1)}
-                              onOpenModal={() => openInputModal(
-                                item.itemId, 
-                                'count', 
-                                `${item.name} - Count`, 
-                                selection.count, 
-                                selection.minCount, 
-                                selection.maxCount
-                              )}
-                            />
-                          )}
-
-                          {/* 🎯 Level Control (ডানপাশে সঠিক পজিশনে থাকবে) */}
-                          {!hasModules && selection.maxLevel && (
-                            <ItemQuantityControl
-                              label="Level"
-                              value={selection.level}
-                              min={1}
-                              max={selection.maxLevel}
-                              onIncrease={() => handleValueChange(item.itemId, 'level', 1)}
-                              onDecrease={() => handleValueChange(item.itemId, 'level', -1)}
-                              onOpenModal={() => openInputModal(
-                                item.itemId, 
-                                'level', 
-                                `${item.name} - Level`, 
-                                selection.level, 
-                                1, 
-                                selection.maxLevel || 1
-                              )}
-                            />
-                          )}
-                        </div>
-
-                        {/* Crafting Station Modules Sub-Control */}
-                        {hasModules && (
-                          <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-100 space-y-2 mt-1">
-                            <span className="text-xs font-bold text-gray-600 block border-b pb-1">
-                              Crafted Modules (Min Lvl: 3)
-                            </span>
-                            {item.limits?.modules?.map((mod) => {
-                              const moduleMeta = item.craftedModulesMetadata?.[mod.id];
-                              const moduleName = moduleMeta?.name || `Module ${mod.id}`;
-                              const currentModLvl = selection.modulesLevel?.[mod.id] ?? 3;
-
-                              return (
-                                <div key={mod.id} className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-700 font-medium truncate max-w-[120px]">
-                                    {moduleName}
-                                  </span>
-                                  <ItemQuantityControl
-                                    label="Lvl"
-                                    value={currentModLvl}
-                                    min={3}
-                                    max={mod.maxLevel}
-                                    onIncrease={() => handleModuleLevelChange(item.itemId, mod.id, 1, mod.maxLevel)}
-                                    onDecrease={() => handleModuleLevelChange(item.itemId, mod.id, -1, mod.maxLevel)}
-                                    onOpenModal={() => {}}
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
+                      <div className="text-xs text-gray-500 mt-1 flex items-center justify-between">
+                        <span>
+                          {isSingleCountOnly ? 'Single Quantity' : `Total Selected: ${currentTotal} / Max: ${selection.maxCount}`}
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-3">
+                      {/* Row 1: Main Control */}
+                      <div className={`flex items-center text-sm ${isSingleCountOnly ? 'justify-end' : 'justify-between'}`}>
+                        {!isSingleCountOnly && (
+                          <ItemQuantityControl
+                            label="Count"
+                            value={selection.count}
+                            min={1}
+                            max={selection.maxCount}
+                            onIncrease={() => handleMainValueChange(item.itemId, 'count', 1)}
+                            onDecrease={() => handleMainValueChange(item.itemId, 'count', -1)}
+                            onOpenModal={() => openInputModal(
+                              item.itemId,
+                              'count',
+                              `${item.name} - Count`,
+                              selection.count,
+                              1,
+                              selection.maxCount
+                            )}
+                          />
+                        )}
+
+                        {selection.maxLevel && (
+                          <ItemQuantityControl
+                            label="Level"
+                            value={selection.level}
+                            min={1}
+                            max={selection.maxLevel}
+                            onIncrease={() => handleMainValueChange(item.itemId, 'level', 1)}
+                            onDecrease={() => handleMainValueChange(item.itemId, 'level', -1)}
+                            onOpenModal={() => openInputModal(
+                              item.itemId,
+                              'level',
+                              `${item.name} - Level`,
+                              selection.level,
+                              1,
+                              selection.maxLevel || 1
+                            )}
+                          />
+                        )}
+                      </div>
+
+                      {/* Row 2+: Duplicate SubRows */}
+                      {subRows.map((row) => (
+                        <div key={row.id} className="flex items-center justify-between text-sm pt-2 border-t border-dashed border-gray-200">
+                          <ItemQuantityControl
+                            label="Count"
+                            value={row.count}
+                            min={0}
+                            max={selection.maxCount}
+                            onIncrease={() => handleSubRowValueChange(item.itemId, row.id, 'count', 1)}
+                            onDecrease={() => handleSubRowValueChange(item.itemId, row.id, 'count', -1)}
+                            onOpenModal={() => openInputModal(
+                              item.itemId,
+                              'count',
+                              `${item.name} - Sub Count`,
+                              row.count,
+                              0,
+                              selection.maxCount,
+                              row.id
+                            )}
+                          />
+
+                          {selection.maxLevel && (
+                            <ItemQuantityControl
+                              label="Level"
+                              value={row.level}
+                              min={1}
+                              max={selection.maxLevel || 1}
+                              onIncrease={() => handleSubRowValueChange(item.itemId, row.id, 'level', 1)}
+                              onDecrease={() => handleSubRowValueChange(item.itemId, row.id, 'level', -1)}
+                              onOpenModal={() => openInputModal(
+                                item.itemId,
+                                'level',
+                                `${item.name} - Sub Level`,
+                                row.level,
+                                1,
+                                selection.maxLevel || 1,
+                                row.id
+                              )}
+                            />
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Add Duplicate Row Button */}
+                      {!isSingleCountOnly && selection.count > 1 && (
+                        <div className="flex justify-center pt-1">
+                          <button
+                            onClick={() => addSubRow(item.itemId)}
+                            className="w-full py-1.5 border border-dashed border-purple-300 text-[#81007f] hover:bg-purple-50 text-xs font-semibold rounded-lg transition-colors"
+                          >
+                            + Add Another Level Row
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </main>
 
+      {/* Direct Input Modal */}
       {activeModal && (
         <ItemQuickInputModal
           activeModal={activeModal}
@@ -588,6 +683,17 @@ export default function AddGameIdPage() {
           onSave={handleModalSave}
         />
       )}
+
+      {/* JSON Import/Export Modal */}
+      <JsonDataModal
+        isOpen={isJsonModalOpen}
+        onClose={() => setIsJsonModalOpen(false)}
+        playerTag={playerTag}
+        townHall={selectedTownHall}
+        userSelections={userSelections}
+        townHallItems={townHallItems}
+        onImportJson={handleImportJson}
+      />
     </div>
   );
 }
