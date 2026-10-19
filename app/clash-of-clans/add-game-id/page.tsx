@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import GameAccountForm from './components/GameAccountForm';
 import ItemQuantityControl from './components/ItemQuantityControl';
@@ -21,16 +21,27 @@ interface LimitData {
   minCount?: number;
   maxCount?: number;
   maxLevel?: number | null;
+  prevMaxLevel?: number | null;
   canMerge?: boolean;
   mergeTarget?: MergeTarget[] | null;
   modules?: ModuleLimit[] | null;
+  prevModules?: ModuleLimit[] | null;
+}
+
+interface UnlockRequirement {
+  buildingId: string;
+  minBuildingLevel: number;
 }
 
 interface ItemData {
   itemId: string;
   name: string;
+  subType?: string;
   craftedModulesMetadata?: Record<string, { name: string }> | null;
-  limits: LimitData;
+  unlockRequirement?: UnlockRequirement | null;
+  minTownHallForUpgrade?: number | null;
+  limitsByBuildingLevel?: Record<string, { maxLevel: number }> | null;
+  limits?: LimitData | null;
 }
 
 interface UserSelection {
@@ -41,6 +52,7 @@ interface UserSelection {
   baseMaxCount: number;
   maxLevel: number | null;
   modulesLevel?: Record<string, number>;
+  isLocked?: boolean;
 }
 
 export default function AddGameIdPage() {
@@ -56,6 +68,10 @@ export default function AddGameIdPage() {
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [inputValue, setInputValue] = useState<string>('');
 
+  // 🔍 সার্চ ও সাব-টাইপ ফিল্টার স্টেট
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedSubTypes, setSelectedSubTypes] = useState<string[]>([]);
+
   useEffect(() => {
     async function fetchMasterMapping() {
       try {
@@ -69,12 +85,16 @@ export default function AddGameIdPage() {
     fetchMasterMapping();
   }, []);
 
+  // 🛡️ ডায়নামিক লজিক ক্যালকুলেটর (পরিশোধিত ও নির্ভুল নিয়ম)
   const calculateDynamicSelections = (
     currentSelections: Record<string, UserSelection>,
-    items: ItemData[]
+    items: ItemData[],
+    currentTownHall: string
   ) => {
     const updated = { ...currentSelections };
+    const thNumber = parseInt(currentTownHall || '1', 10);
 
+    // ১. মার্জিং লিমিট রিসেট ও রি-ক্যালকুলেট
     items.forEach(item => {
       if (updated[item.itemId]) {
         updated[item.itemId].maxCount = updated[item.itemId].baseMaxCount;
@@ -107,6 +127,58 @@ export default function AddGameIdPage() {
       }
     });
 
+    // ২. 🧩 আনলক রিকোয়ারমেন্ট, বিল্ডিং লেভেল ও আপগ্রেড লিমিট সিঙ্ক
+    items.forEach(item => {
+      if (!updated[item.itemId]) return;
+
+      if (item.limitsByBuildingLevel) {
+        let currentBuildingLevel = 1;
+
+        // 🎯 ক) দৃশ্যমানতা চেক (unlockRequirement অনুযায়ী)
+        if (item.unlockRequirement) {
+          const parentBuilding = updated[item.unlockRequirement.buildingId];
+
+          // প্যারেন্ট বিল্ডিং না থাকলে বা আনলকড না হলে আইটেমটি লকড (হিডেন)
+          if (!parentBuilding || parentBuilding.isLocked) {
+            updated[item.itemId].isLocked = true;
+            updated[item.itemId].level = 0;
+            return;
+          }
+
+          currentBuildingLevel = parentBuilding.level;
+          if (currentBuildingLevel < item.unlockRequirement.minBuildingLevel) {
+            updated[item.itemId].isLocked = true;
+            updated[item.itemId].level = 0;
+            return;
+          }
+        }
+
+        // 🎯 খ) minTownHallForUpgrade চেক (শুধুমাত্র আপগ্রেড কন্ট্রোলের জন্য)
+        if (item.minTownHallForUpgrade && thNumber < item.minTownHallForUpgrade) {
+          // আইটেম আনলকড থাকলে লেভেল ১ এ ফিক্সড থাকবে (আপগ্রেড বন্ধ)
+          updated[item.itemId].isLocked = false;
+          updated[item.itemId].level = 1;
+          updated[item.itemId].maxLevel = 1;
+          return;
+        }
+
+        // নরমাল বিল্ডিং/টাউনহল লেভেল অনুযায়ী ডায়নামিক maxLevel সেট করা
+        const levelConfig = item.limitsByBuildingLevel[String(currentBuildingLevel)] || item.limitsByBuildingLevel[String(thNumber)];
+
+        if (levelConfig) {
+          updated[item.itemId].isLocked = false;
+          updated[item.itemId].maxLevel = levelConfig.maxLevel;
+
+          if (updated[item.itemId].level > levelConfig.maxLevel || updated[item.itemId].level === 0) {
+            updated[item.itemId].level = levelConfig.maxLevel;
+          }
+        } else {
+          updated[item.itemId].isLocked = true;
+          updated[item.itemId].level = 0;
+        }
+      }
+    });
+
     return updated;
   };
 
@@ -116,6 +188,8 @@ export default function AddGameIdPage() {
     setTownHallItems([]);
     setUserSelections({});
     setErrorMessage('');
+    setSearchQuery('');
+    setSelectedSubTypes([]);
 
     if (!thValue) return;
 
@@ -140,25 +214,29 @@ export default function AddGameIdPage() {
           const maxC = typeof limits.maxCount === 'number' ? limits.maxCount : 1;
           const maxL = limits.maxLevel ? Number(limits.maxLevel) : null;
 
+          const defaultLevel = limits.prevMaxLevel ?? maxL ?? 1;
+
           const initialModules: Record<string, number> = {};
           if (limits.modules && Array.isArray(limits.modules)) {
             limits.modules.forEach(m => {
-              initialModules[m.id] = 3;
+              const prevMod = limits.prevModules?.find(pm => pm.id === m.id);
+              initialModules[m.id] = prevMod?.maxLevel ?? m.maxLevel ?? 3;
             });
           }
 
           initialSelections[item.itemId] = {
             count: minC,
-            level: 1,
+            level: defaultLevel,
             minCount: minC,
             maxCount: maxC,
             baseMaxCount: maxC,
             maxLevel: maxL,
-            modulesLevel: initialModules
+            modulesLevel: initialModules,
+            isLocked: false
           };
         });
 
-        const syncedSelections = calculateDynamicSelections(initialSelections, result.items);
+        const syncedSelections = calculateDynamicSelections(initialSelections, result.items, thValue);
         setUserSelections(syncedSelections);
       }
     } catch (err: any) {
@@ -171,7 +249,7 @@ export default function AddGameIdPage() {
   const handleValueChange = (itemId: string, field: 'count' | 'level', delta: number) => {
     setUserSelections(prev => {
       const current = prev[itemId];
-      if (!current) return prev;
+      if (!current || current.isLocked) return prev;
 
       const newVal = current[field] + delta;
       const minVal = field === 'count' ? current.minCount : 1;
@@ -184,7 +262,7 @@ export default function AddGameIdPage() {
         [itemId]: { ...current, [field]: newVal }
       };
 
-      return calculateDynamicSelections(tempSelections, townHallItems);
+      return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
     });
   };
 
@@ -244,10 +322,50 @@ export default function AddGameIdPage() {
         }
       };
 
-      return calculateDynamicSelections(tempSelections, townHallItems);
+      return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
     });
 
     setActiveModal(null);
+  };
+
+  // 🎯 আনলকড (দৃশ্যমান) আইটেমের তালিকা ফিল্টার
+  const visibleUnlockedItems = useMemo(() => {
+    return townHallItems.filter(item => {
+      const selection = userSelections[item.itemId];
+      return selection && !selection.isLocked;
+    });
+  }, [townHallItems, userSelections]);
+
+  // 🏷️ সাব-টাইপ ফিল্টার তালিকা (Dynamic SubType Chips)
+  const availableSubTypes = useMemo(() => {
+    const subTypesSet = new Set<string>();
+    visibleUnlockedItems.forEach(item => {
+      if (item.subType && item.subType.trim() !== '') {
+        subTypesSet.add(item.subType.trim());
+      }
+    });
+    return Array.from(subTypesSet);
+  }, [visibleUnlockedItems]);
+
+  // 🔍 সার্চ ও ফিল্টার অনুযায়ী প্রদর্শিত আইটেম তালিকা
+  const filteredDisplayItems = useMemo(() => {
+    return visibleUnlockedItems.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            item.itemId.includes(searchQuery);
+
+      const matchesSubType = selectedSubTypes.length === 0 || 
+                             (item.subType && selectedSubTypes.includes(item.subType.trim()));
+
+      return matchesSearch && matchesSubType;
+    });
+  }, [visibleUnlockedItems, searchQuery, selectedSubTypes]);
+
+  const toggleSubTypeFilter = (subType: string) => {
+    setSelectedSubTypes(prev =>
+      prev.includes(subType)
+        ? prev.filter(s => s !== subType)
+        : [...prev, subType]
+    );
   };
 
   return (
@@ -279,28 +397,86 @@ export default function AddGameIdPage() {
 
         {!loading && selectedTownHall && (
           <div className="animate-in fade-in duration-200">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">
-              Town Hall {selectedTownHall} - Available Items
-            </h3>
 
-            {townHallItems.length === 0 ? (
-              <p className="text-gray-500 text-center py-6">No items found for this Town Hall.</p>
+            {/* 📌 STICKY SEARCH & SUBTYPE FILTER BAR */}
+            <div className="sticky top-[64px] z-10 bg-gray-50/95 backdrop-blur-md pt-2 pb-3 mb-4 border-b border-gray-200 shadow-xs -mx-4 px-4 sm:-mx-6 sm:px-6">
+              <div className="space-y-2.5">
+                {/* 🔍 Search Box */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search building, hero, troop name or ID..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-300 rounded-lg shadow-xs focus:outline-none focus:ring-2 focus:ring-[#81007f] focus:border-transparent"
+                  />
+                  <svg className="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-2.5 text-xs bg-gray-200 hover:bg-gray-300 rounded-full w-4 h-4 flex items-center justify-center text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* 🏷️ Dynamic SubType Chips */}
+                {availableSubTypes.length > 0 && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+                    <button
+                      onClick={() => setSelectedSubTypes([])}
+                      className={`px-3 py-1 rounded-full font-medium whitespace-nowrap transition-colors ${
+                        selectedSubTypes.length === 0
+                          ? 'bg-[#81007f] text-white shadow-xs'
+                          : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      All ({visibleUnlockedItems.length})
+                    </button>
+                    {availableSubTypes.map(subType => {
+                      const isSelected = selectedSubTypes.includes(subType);
+                      return (
+                        <button
+                          key={subType}
+                          onClick={() => toggleSubTypeFilter(subType)}
+                          className={`px-3 py-1 rounded-full font-medium capitalize whitespace-nowrap transition-colors ${
+                            isSelected
+                              ? 'bg-[#81007f] text-white shadow-xs'
+                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          {subType}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-md font-bold text-gray-700">
+                Town Hall {selectedTownHall} Items ({filteredDisplayItems.length})
+              </h3>
+            </div>
+
+            {filteredDisplayItems.length === 0 ? (
+              <p className="text-gray-500 text-center py-8 bg-white rounded-xl border border-dashed border-gray-300">
+                No items match your search or filter.
+              </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {townHallItems.map((item) => {
-                  const selection = userSelections[item.itemId] || {
-                    count: item.limits.minCount ?? 1,
-                    level: 1,
-                    minCount: item.limits.minCount ?? 1,
-                    maxCount: item.limits.maxCount ?? 1,
-                    baseMaxCount: item.limits.maxCount ?? 1,
-                    maxLevel: item.limits.maxLevel || null
-                  };
+                {filteredDisplayItems.map((item) => {
+                  const selection = userSelections[item.itemId];
+                  const hasModules = item.limits?.modules && Array.isArray(item.limits.modules) && item.limits.modules.length > 0;
 
-                  const hasModules = item.limits.modules && Array.isArray(item.limits.modules) && item.limits.modules.length > 0;
+                  const isSingleCountOnly = selection.minCount === 1 && selection.maxCount === 1;
 
                   return (
-                    <div key={item.itemId} className="border border-gray-200 p-4 rounded-xl bg-white shadow-sm flex flex-col justify-between">
+                    <div key={item.itemId} className="border border-gray-200 p-4 rounded-xl bg-white shadow-xs flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-center">
                           <h4 className="font-bold text-gray-800">{item.name}</h4>
@@ -309,8 +485,10 @@ export default function AddGameIdPage() {
                           </span>
                         </div>
                         <div className="text-xs text-gray-500 mt-1 flex items-center justify-between">
-                          <span>Limit: {selection.minCount}-{selection.maxCount}</span>
-                          {item.limits.canMerge && (
+                          <span>
+                            {isSingleCountOnly ? 'Single Quantity' : `Limit: ${selection.minCount}-${selection.maxCount}`}
+                          </span>
+                          {item.limits?.canMerge && (
                             <span className="text-[10px] bg-purple-100 text-[#81007f] px-1.5 py-0.5 rounded font-bold">
                               Mergeable 🛡️
                             </span>
@@ -319,24 +497,28 @@ export default function AddGameIdPage() {
                       </div>
 
                       <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <ItemQuantityControl
-                            label="Count"
-                            value={selection.count}
-                            min={selection.minCount}
-                            max={selection.maxCount}
-                            onIncrease={() => handleValueChange(item.itemId, 'count', 1)}
-                            onDecrease={() => handleValueChange(item.itemId, 'count', -1)}
-                            onOpenModal={() => openInputModal(
-                              item.itemId, 
-                              'count', 
-                              `${item.name} - Count`, 
-                              selection.count, 
-                              selection.minCount, 
-                              selection.maxCount
-                            )}
-                          />
+                        <div className={`flex items-center text-sm ${isSingleCountOnly ? 'justify-end' : 'justify-between'}`}>
 
+                          {!isSingleCountOnly && (
+                            <ItemQuantityControl
+                              label="Count"
+                              value={selection.count}
+                              min={selection.minCount}
+                              max={selection.maxCount}
+                              onIncrease={() => handleValueChange(item.itemId, 'count', 1)}
+                              onDecrease={() => handleValueChange(item.itemId, 'count', -1)}
+                              onOpenModal={() => openInputModal(
+                                item.itemId, 
+                                'count', 
+                                `${item.name} - Count`, 
+                                selection.count, 
+                                selection.minCount, 
+                                selection.maxCount
+                              )}
+                            />
+                          )}
+
+                          {/* 🎯 Level Control (ডানপাশে সঠিক পজিশনে থাকবে) */}
                           {!hasModules && selection.maxLevel && (
                             <ItemQuantityControl
                               label="Level"
@@ -357,12 +539,13 @@ export default function AddGameIdPage() {
                           )}
                         </div>
 
+                        {/* Crafting Station Modules Sub-Control */}
                         {hasModules && (
                           <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-100 space-y-2 mt-1">
                             <span className="text-xs font-bold text-gray-600 block border-b pb-1">
                               Crafted Modules (Min Lvl: 3)
                             </span>
-                            {item.limits.modules?.map((mod) => {
+                            {item.limits?.modules?.map((mod) => {
                               const moduleMeta = item.craftedModulesMetadata?.[mod.id];
                               const moduleName = moduleMeta?.name || `Module ${mod.id}`;
                               const currentModLvl = selection.modulesLevel?.[mod.id] ?? 3;
