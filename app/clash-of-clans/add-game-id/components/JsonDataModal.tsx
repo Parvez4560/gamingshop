@@ -27,7 +27,7 @@ export default function JsonDataModal({
 
   if (!isOpen) return null;
 
-  // 🎯 ইউজার ইনপুটগুলোকে অফিশিয়াল Clash of Clans JSON স্ট্রাকচারে রূপান্তর
+  // 🎯 একই লেভেল থাকলে সেগুলোকে একত্র (Consolidate) করে অফিশিয়াল জেসন তৈরি করা
   const generateOfficialGameJson = () => {
     const officialData: Record<string, any> = {
       tag: playerTag || "#PLAYER",
@@ -51,37 +51,49 @@ export default function JsonDataModal({
       const subRows = selection.subRows || [];
       const category = (item.mainType || item.category || '').toLowerCase();
 
-      if (category.includes('hero')) {
-        officialData.heroes.push({ data: rawId, lvl: selection.level });
-      } else if (category.includes('troop') || category.includes('unit')) {
-        officialData.units.push({ data: rawId, lvl: selection.level });
-      } else if (category.includes('spell')) {
-        officialData.spells.push({ data: rawId, lvl: selection.level });
-      } else if (category.includes('pet')) {
-        officialData.pets.push({ data: rawId, lvl: selection.level });
-      } else if (category.includes('equipment')) {
-        officialData.equipment.push({ data: rawId, lvl: selection.level });
-      } else if (category.includes('trap')) {
-        const totalCount = selection.count + subRows.reduce((sum: number, r: any) => sum + r.count, 0);
-        officialData.traps.push({ data: rawId, lvl: selection.level, cnt: totalCount });
-      } else if (category.includes('siege')) {
-        officialData.siege_machines.push({ data: rawId, lvl: selection.level });
-      } else {
-        // Buildings Handling (Multiple Sub-levels)
-        officialData.buildings.push({
-          data: rawId,
-          lvl: selection.level,
-          cnt: selection.count
-        });
+      // 🛡️ একই লেভেল মার্জ করার ম্যাপ (Key: Level, Value: Total Count)
+      const levelCountMap: Record<number, number> = {};
 
-        subRows.forEach((r: any) => {
-          if (r.count > 0) {
-            officialData.buildings.push({
-              data: rawId,
-              lvl: r.level,
-              cnt: r.count
-            });
-          }
+      // ১. মূল রো-এর লেভেল ও কাউন্ট যোগ
+      const mainLvl = selection.level || 1;
+      levelCountMap[mainLvl] = (levelCountMap[mainLvl] || 0) + selection.count;
+
+      // ২. সাব-রো গুলোর লেভেল ও কাউন্ট যোগ (একই লেভেল পেলে আগেরটার সাথে স্বয়ংক্রিয়ভাবে যোগ হয়ে যাবে)
+      subRows.forEach((r: any) => {
+        if (r.count > 0) {
+          const subLvl = r.level || 1;
+          levelCountMap[subLvl] = (levelCountMap[subLvl] || 0) + r.count;
+        }
+      });
+
+      // ৩. ক্যাটাগরি অনুযায়ী প্রসেসিং
+      if (category.includes('hero')) {
+        const maxLevel = Math.max(...Object.keys(levelCountMap).map(Number));
+        officialData.heroes.push({ data: rawId, lvl: maxLevel });
+      } else if (category.includes('troop') || category.includes('unit')) {
+        const maxLevel = Math.max(...Object.keys(levelCountMap).map(Number));
+        officialData.units.push({ data: rawId, lvl: maxLevel });
+      } else if (category.includes('spell')) {
+        const maxLevel = Math.max(...Object.keys(levelCountMap).map(Number));
+        officialData.spells.push({ data: rawId, lvl: maxLevel });
+      } else if (category.includes('pet')) {
+        const maxLevel = Math.max(...Object.keys(levelCountMap).map(Number));
+        officialData.pets.push({ data: rawId, lvl: maxLevel });
+      } else if (category.includes('equipment')) {
+        const maxLevel = Math.max(...Object.keys(levelCountMap).map(Number));
+        officialData.equipment.push({ data: rawId, lvl: maxLevel });
+      } else if (category.includes('trap')) {
+        const totalCount = Object.values(levelCountMap).reduce((a, b) => a + b, 0);
+        const maxLevel = Math.max(...Object.keys(levelCountMap).map(Number));
+        officialData.traps.push({ data: rawId, lvl: maxLevel, cnt: totalCount });
+      } else {
+        // Buildings: একই লেভেলের একাধিক রো থাকলে সেগুলো মার্জ হয়ে একটি অবজেক্ট হবে
+        Object.entries(levelCountMap).forEach(([lvl, cnt]) => {
+          officialData.buildings.push({
+            data: rawId,
+            lvl: Number(lvl),
+            cnt: cnt
+          });
         });
       }
     });

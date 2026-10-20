@@ -83,6 +83,41 @@ export default function AddGameIdPage() {
     fetchMasterMapping();
   }, []);
 
+  // 🎯 রিয়েল-টাইম UI মার্জিং: একাধিক সারিতে একই লেভেল চলে আসলে সাথে সাথেই অটো-মার্জ করে নেওয়া
+  const consolidateSelection = (selection: UserSelection): UserSelection => {
+    if (!selection.subRows || selection.subRows.length === 0) return selection;
+
+    const levelMap: Record<number, number> = {};
+    levelMap[selection.level] = (levelMap[selection.level] || 0) + selection.count;
+
+    selection.subRows.forEach(row => {
+      if (row.count > 0) {
+        levelMap[row.level] = (levelMap[row.level] || 0) + row.count;
+      }
+    });
+
+    const uniqueLevels = Object.keys(levelMap).map(Number);
+    if (uniqueLevels.length === (selection.subRows.length + 1)) {
+      return selection; // কোনো ডুপ্লিকেট লেভেল নেই
+    }
+
+    const mainLevel = selection.level;
+    const newMainCount = levelMap[mainLevel] || selection.count;
+    delete levelMap[mainLevel];
+
+    const newSubRows: SubRow[] = Object.entries(levelMap).map(([lvl, cnt]) => ({
+      id: `${Date.now()}_${lvl}`,
+      count: cnt,
+      level: Number(lvl)
+    }));
+
+    return {
+      ...selection,
+      count: newMainCount,
+      subRows: newSubRows
+    };
+  };
+
   const calculateDynamicSelections = (
     currentSelections: Record<string, UserSelection>,
     items: ItemData[],
@@ -195,71 +230,83 @@ export default function AddGameIdPage() {
     }
   };
 
+  // 🛡️ মোট সংখ্যা গণনাকারী (মূল রো + সব সাব-রো)
   const getTotalItemCount = (selection: UserSelection) => {
     const subTotal = (selection.subRows || []).reduce((sum, r) => sum + r.count, 0);
     return selection.count + subTotal;
   };
 
-  // 🎯 ১. মূল রো-এর প্লাস/মাইনাস চেঞ্জ
+  // 🛡️ সর্বোচ্চ অনুমতিপ্রাপ্ত সারির সংখ্যা: min(Total Count, Max Level)
+  const getMaxAllowedRows = (selection: UserSelection) => {
+    const totalSelected = getTotalItemCount(selection);
+    const maxLevels = selection.maxLevel || 1;
+    return Math.min(totalSelected, maxLevels);
+  };
+
+  // 🎯 ১. মূল রো-এর চেঞ্জ (Strict Aggregate Sum Check + Dynamic Consolidation)
   const handleMainValueChange = (itemId: string, field: 'count' | 'level', delta: number) => {
     setUserSelections(prev => {
       const current = prev[itemId];
       if (!current || current.isLocked) return prev;
 
+      let updatedSelection = { ...current };
+
       if (field === 'count') {
-        const total = getTotalItemCount(current);
-        const newMainCount = current.count + delta;
+        const currentTotal = getTotalItemCount(current);
+        const newTotalCount = currentTotal + delta;
 
-        if (newMainCount < 1) return prev;
-        if (delta > 0 && total >= current.maxCount) return prev;
-
-        const tempSelections = {
-          ...prev,
-          [itemId]: { ...current, count: newMainCount }
-        };
-        return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
+        if (newTotalCount < current.minCount || newTotalCount > current.maxCount || current.count + delta < 1) {
+          return prev;
+        }
+        updatedSelection.count = current.count + delta;
       } else {
-        const newVal = current.level + delta;
-        const maxVal = current.maxLevel || 1;
-        if (newVal < 1 || newVal > maxVal) return prev;
-
-        const tempSelections = {
-          ...prev,
-          [itemId]: { ...current, level: newVal }
-        };
-        return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
+        const newVal = Math.min(current.maxLevel || 1, Math.max(1, current.level + delta));
+        updatedSelection.level = newVal;
       }
+
+      updatedSelection = consolidateSelection(updatedSelection);
+
+      const tempSelections = { ...prev, [itemId]: updatedSelection };
+      return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
     });
   };
 
-  // 🎯 ২. ওয়াল/বিল্ডিং এর জন্য বাল্ক স্প্লিট রো তৈরি
+  // 🎯 ২. নতুন সাব-রো তৈরি (Max Allowed Rows সীমার অধীনে)
   const addSubRow = (itemId: string) => {
     setUserSelections(prev => {
       const current = prev[itemId];
       if (!current || current.count <= 1) return prev;
 
-      const isWall = current.maxCount > 50; 
-      const defaultSplitCount = isWall ? Math.floor(current.count / 2) : 1; // ওয়ালের জন্য অর্ধেক বা কাস্টম স্প্লিট
-
       const subRows = current.subRows || [];
+      const currentRowsCount = subRows.length + 1;
+      const maxAllowedRows = getMaxAllowedRows(current);
+
+      if (currentRowsCount >= maxAllowedRows) return prev;
+
+      // অব্যবহৃত লেভেল নির্বাচন করার চেষ্টা
+      const usedLevels = new Set([current.level, ...subRows.map(r => r.level)]);
+      let nextLevel = Math.max(1, (current.level || 1) - 1);
+      while (usedLevels.has(nextLevel) && nextLevel > 1) {
+        nextLevel--;
+      }
+
       const newSubRow: SubRow = {
         id: Date.now().toString(),
-        count: defaultSplitCount,
-        level: Math.max(1, (current.level || 1) - 1)
+        count: 1,
+        level: nextLevel
       };
 
-      return {
-        ...prev,
-        [itemId]: {
-          ...current,
-          count: current.count - defaultSplitCount, // মূল রো থেকে কেটে সাব-রো তে ট্রান্সফার
-          subRows: [...subRows, newSubRow]
-        }
-      };
+      const updatedSelection = consolidateSelection({
+        ...current,
+        count: current.count - 1,
+        subRows: [...subRows, newSubRow]
+      });
+
+      return { ...prev, [itemId]: updatedSelection };
     });
   };
 
-  // 🎯 ৩. সাব-রো ভ্যালু পরিবর্তন ও ০ বানালে অটো মার্জ ব্যাক
+  // 🎯 ৩. সাব-রো এর মান পরিবর্তন (Auto Merge and Return to Main)
   const handleSubRowValueChange = (itemId: string, rowId: string, field: 'count' | 'level', delta: number) => {
     setUserSelections(prev => {
       const current = prev[itemId];
@@ -272,9 +319,8 @@ export default function AddGameIdPage() {
 
         if (field === 'count') {
           const newCnt = row.count + delta;
-
           if (newCnt <= 0) {
-            returnedToMain = row.count; 
+            returnedToMain = row.count;
             return null;
           }
 
@@ -289,18 +335,16 @@ export default function AddGameIdPage() {
         }
       }).filter(Boolean) as SubRow[];
 
-      return {
-        ...prev,
-        [itemId]: {
-          ...current,
-          count: current.count + returnedToMain,
-          subRows: updatedSubRows
-        }
-      };
+      const updatedSelection = consolidateSelection({
+        ...current,
+        count: current.count + returnedToMain,
+        subRows: updatedSubRows
+      });
+
+      return { ...prev, [itemId]: updatedSelection };
     });
   };
 
-  // 🎯 ৪. ইনপুট মডাল সরাসরি ম্যানুয়াল সংখ্যা ইনপুট দেওয়ার জন্য (যেমন ওয়ালের ৩০০/২০০ বসানো)
   const openInputModal = (
     itemId: string, 
     type: 'count' | 'level', 
@@ -330,7 +374,6 @@ export default function AddGameIdPage() {
       const subRowId = (activeModal as any).subRowId;
 
       if (subRowId && current.subRows) {
-        // সাব-রো কাস্টম কাউন্ট এডিট
         let diff = 0;
         const updatedSubRows = current.subRows.map(r => {
           if (r.id === subRowId) {
@@ -340,23 +383,27 @@ export default function AddGameIdPage() {
           return r;
         }).filter(r => r.count > 0);
 
-        return {
-          ...prev,
-          [activeModal.itemId]: {
-            ...current,
-            count: Math.max(1, current.count - diff), // মেইন রো-এর সাথে এডজাস্ট
-            subRows: updatedSubRows
-          }
-        };
+        const newMainCount = current.count - diff;
+        const total = newMainCount + updatedSubRows.reduce((sum, r) => sum + r.count, 0);
+
+        if (total < current.minCount || total > current.maxCount || newMainCount < 1) {
+          return prev;
+        }
+
+        const updatedSelection = consolidateSelection({
+          ...current,
+          count: newMainCount,
+          subRows: updatedSubRows
+        });
+
+        return { ...prev, [activeModal.itemId]: updatedSelection };
       } else {
-        // মেইন রো এডিট
-        const tempSelections = {
-          ...prev,
-          [activeModal.itemId]: {
-            ...current,
-            [activeModal.type]: val
-          }
-        };
+        const updatedSelection = consolidateSelection({
+          ...current,
+          [activeModal.type]: val
+        });
+
+        const tempSelections = { ...prev, [activeModal.itemId]: updatedSelection };
         return calculateDynamicSelections(tempSelections, townHallItems, selectedTownHall);
       }
     });
@@ -398,9 +445,10 @@ export default function AddGameIdPage() {
         if (itemRecords && itemRecords.length > 0) {
           const firstRecord = itemRecords[0];
           const maxC = updated[itemId].maxCount;
+          const minC = updated[itemId].minCount;
           const maxL = updated[itemId].maxLevel || 1;
 
-          updated[itemId].count = Math.min(maxC, Math.max(1, Number(firstRecord.cnt) || 1));
+          updated[itemId].count = Math.min(maxC, Math.max(minC, Number(firstRecord.cnt) || minC));
           updated[itemId].level = Math.min(maxL, Math.max(1, Number(firstRecord.lvl) || 1));
 
           if (itemRecords.length > 1) {
@@ -414,6 +462,8 @@ export default function AddGameIdPage() {
             }
             updated[itemId].subRows = extraSubRows;
           }
+
+          updated[itemId] = consolidateSelection(updated[itemId]);
         }
       });
 
@@ -551,6 +601,10 @@ export default function AddGameIdPage() {
                 const isSingleCountOnly = selection.minCount === 1 && selection.maxCount === 1;
                 const subRows = selection.subRows || [];
                 const currentTotal = getTotalItemCount(selection);
+                const maxAllowedRows = getMaxAllowedRows(selection);
+                const currentRowsCount = subRows.length + 1;
+
+                const canAddRow = !isSingleCountOnly && selection.count > 1 && currentRowsCount < maxAllowedRows;
 
                 return (
                   <div key={item.itemId} className="border border-gray-200 p-4 rounded-xl bg-white shadow-xs flex flex-col justify-between">
@@ -654,7 +708,7 @@ export default function AddGameIdPage() {
                       ))}
 
                       {/* Add Duplicate Row Button */}
-                      {!isSingleCountOnly && selection.count > 1 && (
+                      {canAddRow && (
                         <div className="flex justify-center pt-1">
                           <button
                             onClick={() => addSubRow(item.itemId)}
